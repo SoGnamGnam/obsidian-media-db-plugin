@@ -227,7 +227,7 @@ export class ModalHelper {
 		const modal = new MediaDbSearchModal(this.plugin, searchModalOptions);
 		const res: SearchModalResult = await new Promise(resolve => {
 			modal.setSubmitCallback(res => resolve({ code: ModalResultCode.SUCCESS, data: res }));
-			modal.setCloseCallback(err => {
+			modal.setCustomCloseCallback(err => {
 				if (err) {
 					resolve({ code: ModalResultCode.ERROR, error: err });
 				}
@@ -293,7 +293,7 @@ export class ModalHelper {
 		const modal = new MediaDbAdvancedSearchModal(this.plugin, advancedSearchModalOptions);
 		const res: AdvancedSearchModalResult = await new Promise(resolve => {
 			modal.setSubmitCallback(res => resolve({ code: ModalResultCode.SUCCESS, data: res }));
-			modal.setCloseCallback(err => {
+			modal.setCustomCloseCallback(err => {
 				if (err) {
 					resolve({ code: ModalResultCode.ERROR, error: err });
 				}
@@ -357,7 +357,7 @@ export class ModalHelper {
 		const modal = new MediaDbIdSearchModal(this.plugin, idSearchModalOptions);
 		const res: IdSearchModalResult = await new Promise(resolve => {
 			modal.setSubmitCallback(res => resolve({ code: ModalResultCode.SUCCESS, data: res }));
-			modal.setCloseCallback(err => {
+			modal.setCustomCloseCallback(err => {
 				if (err) {
 					resolve({ code: ModalResultCode.ERROR, error: err });
 				}
@@ -422,7 +422,7 @@ export class ModalHelper {
 		const res: SelectModalResult = await new Promise(resolve => {
 			modal.setSubmitCallback(res => resolve({ code: ModalResultCode.SUCCESS, data: res }));
 			modal.setSkipCallback(() => resolve({ code: ModalResultCode.SKIP }));
-			modal.setCloseCallback(err => {
+			modal.setCustomCloseCallback(err => {
 				if (err) {
 					resolve({ code: ModalResultCode.ERROR, error: err });
 				}
@@ -484,7 +484,7 @@ export class ModalHelper {
 		const modal = new MediaDbPreviewModal(this.plugin, previewModalOptions);
 		const res: PreviewModalResult = await new Promise(resolve => {
 			modal.setSubmitCallback(res => resolve({ code: ModalResultCode.SUCCESS, data: res }));
-			modal.setCloseCallback(err => {
+			modal.setCustomCloseCallback(err => {
 				if (err) {
 					resolve({ code: ModalResultCode.ERROR, error: err });
 				}

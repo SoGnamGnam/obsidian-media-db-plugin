@@ -32,7 +32,7 @@ export class MediaDbAdvancedSearchModal extends Modal {
 		this.submitCallback = submitCallback;
 	}
 
-	setCloseCallback(closeCallback: (err?: Error) => void): void {
+	setCustomCloseCallback(closeCallback: (err?: Error) => void): void {
 		this.closeCallback = closeCallback;
 	}
 

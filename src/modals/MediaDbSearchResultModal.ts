@@ -32,7 +32,7 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 		this.submitCallback = submitCallback;
 	}
 
-	setCloseCallback(closeCallback: (err?: Error) => void): void {
+	setCustomCloseCallback(closeCallback: (err?: Error) => void): void {
 		this.closeCallback = closeCallback;
 	}
 
