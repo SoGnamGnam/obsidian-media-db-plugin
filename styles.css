@@ -123,4 +123,64 @@ small.media-db-plugin-list-text {
 	padding: var(--size-4-4);
 }
 
-/* endregion */
+/* Stile per gli elementi con immagine nella modale di selezione */
+.media-db-plugin-select-element-with-image {
+	display: flex !important;
+	flex-direction: row;
+	align-items: flex-start;
+	gap: 12px;
+}
+
+/* Container dell'immagine thumbnail */
+.media-db-plugin-select-element-image-container {
+	flex-shrink: 0;
+	width: 60px;
+	height: 80px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--background-secondary);
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+/* Immagine thumbnail */
+.media-db-plugin-select-element-image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	border-radius: 4px;
+}
+
+/* Placeholder quando non c'è immagine */
+.media-db-plugin-select-element-image-placeholder {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	font-size: 24px;
+	color: var(--text-muted);
+	background: var(--background-secondary-alt);
+	border-radius: 4px;
+}
+
+/* Container del testo a fianco dell'immagine */
+.media-db-plugin-select-element-text-container {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+/* Assicura che il wrapper abbia abbastanza spazio per le immagini */
+.media-db-plugin-select-wrapper {
+	max-height: 400px;
+}
+
+/* Aumenta leggermente l'altezza minima degli elementi per accomodare le immagini */
+.media-db-plugin-select-element.media-db-plugin-select-element-with-image {
+	min-height: 90px;
+	padding: 8px;
+}

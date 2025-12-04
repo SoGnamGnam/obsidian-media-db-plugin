@@ -40,11 +40,45 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 		this.skipCallback = skipCallback;
 	}
 
-	// Renders each suggestion item.
+	// Renders each suggestion item with image thumbnail.
 	renderElement(item: MediaTypeModel, el: HTMLElement): void {
-		el.createEl('div', { text: this.plugin.mediaTypeManager.getFileName(item) });
-		el.createEl('small', { text: `${item.getSummary()}\n` });
-		el.createEl('small', { text: `${item.type.toUpperCase() + (item.subType ? ` (${item.subType})` : '')} from ${item.dataSource}` });
+		// Create a container with flexbox layout for image + text
+		el.addClass('media-db-plugin-select-element-with-image');
+		
+		// Create image container
+		const imageContainer = el.createDiv({ cls: 'media-db-plugin-select-element-image-container' });
+		
+		// Add image if available
+		if (item.image && typeof item.image === 'string' && item.image.startsWith('http')) {
+			const img = imageContainer.createEl('img', {
+				cls: 'media-db-plugin-select-element-image',
+				attr: {
+					src: item.image,
+					alt: item.title || 'Media thumbnail',
+					loading: 'lazy',
+				},
+			});
+			// Handle image load errors
+			img.onerror = () => {
+				img.style.display = 'none';
+				imageContainer.createDiv({ 
+					cls: 'media-db-plugin-select-element-image-placeholder',
+					text: '📷',
+				});
+			};
+		} else {
+			// Show placeholder if no image
+			imageContainer.createDiv({ 
+				cls: 'media-db-plugin-select-element-image-placeholder',
+				text: '📷',
+			});
+		}
+
+		// Create text container
+		const textContainer = el.createDiv({ cls: 'media-db-plugin-select-element-text-container' });
+		textContainer.createEl('div', { text: this.plugin.mediaTypeManager.getFileName(item) });
+		textContainer.createEl('small', { text: `${item.getSummary()}\n` });
+		textContainer.createEl('small', { text: `${item.type.toUpperCase() + (item.subType ? ` (${item.subType})` : '')} from ${item.dataSource}` });
 	}
 
 	// Perform action on the selected suggestion.

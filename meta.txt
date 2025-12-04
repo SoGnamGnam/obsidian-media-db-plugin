@@ -4505,7 +4505,7 @@
 			"format": "esm"
 		},
 		"src/modals/MediaDbSearchResultModal.ts": {
-			"bytes": 2268,
+			"bytes": 3438,
 			"imports": [
 				{
 					"path": "src/utils/ModalHelper.ts",
@@ -5176,13 +5176,13 @@
 					"bytesInOutput": 1423
 				},
 				"src/modals/MediaDbSearchResultModal.ts": {
-					"bytesInOutput": 1225
+					"bytesInOutput": 1846
 				},
 				"src/utils/DateFormatter.ts": {
 					"bytesInOutput": 576
 				}
 			},
-			"bytes": 190459
+			"bytes": 191080
 		}
 	}
 }
