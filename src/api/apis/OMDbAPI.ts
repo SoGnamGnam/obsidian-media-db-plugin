@@ -74,6 +74,16 @@ export class OMDbAPI extends APIModel {
 		this.typeMappings.set('game', 'game');
 	}
 
+	/**
+	 * Helper to get a valid poster URL or undefined
+	 */
+	private getPosterUrl(poster: string | undefined): string | undefined {
+		if (poster && poster !== 'N/A' && poster.startsWith('http')) {
+			return poster;
+		}
+		return undefined;
+	}
+
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
@@ -119,6 +129,10 @@ export class OMDbAPI extends APIModel {
 			if (type === undefined) {
 				continue;
 			}
+			
+			// Get poster URL (OMDb returns "N/A" when no poster available)
+			const posterUrl = this.getPosterUrl(result.Poster);
+			
 			if (type === 'movie') {
 				ret.push(
 					new MovieModel({
@@ -128,6 +142,7 @@ export class OMDbAPI extends APIModel {
 						year: result.Year,
 						dataSource: this.apiName,
 						id: result.imdbID,
+						image: posterUrl, // ✅ AGGIUNTO
 					}),
 				);
 			} else if (type === 'series') {
@@ -139,6 +154,7 @@ export class OMDbAPI extends APIModel {
 						year: result.Year,
 						dataSource: this.apiName,
 						id: result.imdbID,
+						image: posterUrl, // ✅ AGGIUNTO
 					}),
 				);
 			} else if (type === 'game') {
@@ -150,6 +166,7 @@ export class OMDbAPI extends APIModel {
 						year: result.Year,
 						dataSource: this.apiName,
 						id: result.imdbID,
+						image: posterUrl, // ✅ AGGIUNTO
 					}),
 				);
 			}

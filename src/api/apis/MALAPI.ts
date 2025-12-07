@@ -57,6 +57,8 @@ export class MALAPI extends APIModel {
 			const type = resType ? this.typeMappings.get(resType) : undefined;
 			const year = result.year?.toString() ?? result.aired?.prop?.from?.year?.toString() ?? '';
 			const id = result.mal_id?.toString();
+			
+			const imageUrl = result.images?.jpg?.image_url ?? result.images?.webp?.image_url;
 
 			if (type === undefined) {
 				ret.push(
@@ -67,6 +69,7 @@ export class MALAPI extends APIModel {
 						year,
 						dataSource: this.apiName,
 						id,
+						image: imageUrl, 
 					}),
 				);
 			}
@@ -79,6 +82,7 @@ export class MALAPI extends APIModel {
 						year,
 						dataSource: this.apiName,
 						id,
+						image: imageUrl, 
 					}),
 				);
 			} else if (type === 'series' || type === 'ova') {
@@ -90,6 +94,7 @@ export class MALAPI extends APIModel {
 						year,
 						dataSource: this.apiName,
 						id,
+						image: imageUrl, 
 					}),
 				);
 			}
@@ -201,14 +206,14 @@ export class MALAPI extends APIModel {
 				episodes: result.episodes,
 				duration: result.duration,
 				onlineRating: result.score,
-				streamingServices: result.streaming?.map(x => x.name).filter(isTruthy),
 				image: result.images?.jpg?.image_url,
 
 				released: true,
+				airing: result.airing,
 				ageRating: result.rating,
 				airedFrom: this.plugin.dateFormatter.format(result.aired?.from, this.apiDateFormat),
 				airedTo: this.plugin.dateFormatter.format(result.aired?.to, this.apiDateFormat),
-				airing: result.airing,
+				streamingServices: result.streaming?.map(x => x.name).filter(isTruthy),
 
 				userData: {
 					watched: false,
@@ -220,6 +225,7 @@ export class MALAPI extends APIModel {
 
 		throw new Error(`MDB | Unknown media type for id ${id}`);
 	}
+
 	getDisabledMediaTypes(): MediaType[] {
 		return this.plugin.settings.MALAPI_disabledMediaTypes;
 	}

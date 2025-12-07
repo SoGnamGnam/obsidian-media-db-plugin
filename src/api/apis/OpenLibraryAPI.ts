@@ -35,6 +35,18 @@ export class OpenLibraryAPI extends APIModel {
 		this.types = [MediaType.Book];
 	}
 
+	/**
+	 * Helper to get cover URL from cover ID
+	 * OpenLibrary provides covers via: https://covers.openlibrary.org/b/id/{cover_id}-{size}.jpg
+	 * Sizes: S (small), M (medium), L (large)
+	 */
+	private getCoverUrl(coverId: number | undefined): string | undefined {
+		if (coverId && coverId > 0) {
+			return `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`;
+		}
+		return undefined;
+	}
+
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
@@ -62,6 +74,8 @@ export class OpenLibraryAPI extends APIModel {
 		const ret: MediaTypeModel[] = [];
 
 		for (const result of data.docs) {
+			const coverUrl = this.getCoverUrl(result.cover_i);
+			
 			ret.push(
 				new BookModel({
 					title: result.title,
@@ -69,7 +83,8 @@ export class OpenLibraryAPI extends APIModel {
 					year: result.first_publish_year?.toString() ?? 'unknown',
 					dataSource: this.apiName,
 					id: result.key,
-					author: result.author_name.join(', '),
+					author: result.author_name?.join(', ') ?? 'Unknown',
+					image: coverUrl, // ✅ AGGIUNTO
 				}),
 			);
 		}
@@ -86,7 +101,7 @@ export class OpenLibraryAPI extends APIModel {
 			params: {
 				query: {
 					q: `key:${id}`,
-					fields: 'key,title,author_name,number_of_pages_median,first_publish_year,isbn,ratings_score,first_sentence,title_suggest,rating*,cover_edition_key',
+					fields: 'key,title,author_name,number_of_pages_median,first_publish_year,isbn,ratings_score,first_sentence,title_suggest,rating*,cover_edition_key,cover_i',
 				},
 			},
 			fetch: obsidianFetch,
@@ -109,6 +124,14 @@ export class OpenLibraryAPI extends APIModel {
 		const isbn = Number((result.isbn ?? []).find((el: string) => el.length <= 10));
 		const isbn13 = Number((result.isbn ?? []).find((el: string) => el.length == 13));
 
+		// Prefer cover_edition_key for high-quality cover, fallback to cover_i
+		let imageUrl: string | undefined;
+		if (result.cover_edition_key) {
+			imageUrl = `https://covers.openlibrary.org/b/OLID/${result.cover_edition_key}-L.jpg`;
+		} else {
+			imageUrl = this.getCoverUrl(result.cover_i);
+		}
+
 		return new BookModel({
 			title: result.title,
 			year: result.first_publish_year?.toString() ?? 'unknown',
@@ -119,10 +142,10 @@ export class OpenLibraryAPI extends APIModel {
 			isbn13: Number.isNaN(isbn13) ? undefined : isbn13,
 			englishTitle: result.title,
 
-			author: result.author_name.join(', '),
+			author: result.author_name?.join(', ') ?? 'Unknown',
 			pages: Number.isNaN(pages) ? undefined : pages,
 			onlineRating: result.ratings_average,
-			image: result.cover_edition_key ? `https://covers.openlibrary.org/b/OLID/` + result.cover_edition_key + `-L.jpg` : undefined,
+			image: imageUrl,
 
 			released: true,
 

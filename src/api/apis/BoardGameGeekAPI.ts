@@ -42,8 +42,6 @@ export class BoardGameGeekAPI extends APIModel {
 		const data = fetchData.text;
 		const response = new window.DOMParser().parseFromString(data, 'text/xml');
 
-		// console.debug(response);
-
 		const ret: MediaTypeModel[] = [];
 
 		for (const boardgame of Array.from(response.querySelectorAll('boardgame'))) {
@@ -60,6 +58,40 @@ export class BoardGameGeekAPI extends APIModel {
 					year,
 				}),
 			);
+		}
+
+		// Fetch thumbnails using XMLApi2 batch request
+		if (ret.length > 0) {
+			const ids = ret.map(r => r.id).filter(Boolean).join(',');
+			
+			try {
+				const detailsUrl = `https://boardgamegeek.com/xmlapi2/thing?id=${ids}`;
+				
+				const detailsData = await requestUrl({ 
+					url: detailsUrl,
+					headers: {
+						Authorization: `Bearer ${this.plugin.settings.BoardgameGeekKey}`,
+					},
+				});
+				
+				if (detailsData.status === 200) {
+					const detailsResponse = new window.DOMParser().parseFromString(detailsData.text, 'text/xml');
+					
+					for (const item of Array.from(detailsResponse.querySelectorAll('item'))) {
+						const itemId = item.getAttribute('id');
+						const thumbnail = item.querySelector('thumbnail')?.textContent;
+						
+						// Find matching model and update image
+						const model = ret.find(r => r.id === itemId);
+						if (model && thumbnail) {
+							(model as BoardGameModel).image = thumbnail;
+						}
+					}
+				}
+			} catch (e) {
+				// If fetching thumbnails fails, continue without images
+				console.debug('MDB | Failed to fetch BGG thumbnails:', e);
+			}
 		}
 
 		return ret;
@@ -86,7 +118,6 @@ export class BoardGameGeekAPI extends APIModel {
 
 		const data = fetchData.text;
 		const response = new window.DOMParser().parseFromString(data, 'text/xml');
-		// console.debug(response);
 
 		const boardgame = response.querySelector('boardgame');
 		if (!boardgame) {
