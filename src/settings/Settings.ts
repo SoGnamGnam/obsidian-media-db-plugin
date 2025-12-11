@@ -1,6 +1,6 @@
 import type { App } from 'obsidian';
 import { Notice, PluginSettingTab, Setting } from 'obsidian';
-import type { MediaType } from 'src/utils/MediaType';
+import { MediaType } from 'src/utils/MediaType';
 import { mount } from 'svelte';
 import type MediaDbPlugin from '../main';
 import type { MediaTypeModel } from '../models/MediaTypeModel';
@@ -17,6 +17,7 @@ export interface MediaDbPluginSettings {
 	GiantBombKey: string;
 	ComicVineKey: string;
 	BoardgameGeekKey: string;
+	RawgKey: string;
 	sfwFilter: boolean;
 	templates: boolean;
 	customDateFormat: string;
@@ -32,6 +33,7 @@ export interface MediaDbPluginSettings {
 	GiantBombAPI_disabledMediaTypes: MediaType[];
 	WikipediaAPI_disabledMediaTypes: MediaType[];
 	BoardgameGeekAPI_disabledMediaTypes: MediaType[];
+	RawgAPI_disabledMediaTypes: MediaType[];
 	MusicBrainzAPI_disabledMediaTypes: MediaType[];
 	OpenLibraryAPI_disabledMediaTypes: MediaType[];
 	movieTemplate: string;
@@ -81,6 +83,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	GiantBombKey: '',
 	ComicVineKey: '',
 	BoardgameGeekKey: '',
+	RawgKey: '',
 	sfwFilter: true,
 	templates: true,
 	customDateFormat: 'L',
@@ -96,6 +99,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	GiantBombAPI_disabledMediaTypes: [],
 	WikipediaAPI_disabledMediaTypes: [],
 	BoardgameGeekAPI_disabledMediaTypes: [],
+	RawgAPI_disabledMediaTypes: [],
 	MusicBrainzAPI_disabledMediaTypes: [],
 	OpenLibraryAPI_disabledMediaTypes: [],
 	movieTemplate: '',
@@ -235,6 +239,17 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						void this.plugin.saveSettings();
 					});
 			});
+		new Setting(containerEl)
+	.setName('RAWG API key')
+	.setDesc('API key for "rawg.io". Get one at https://rawg.io/apidocs')
+	.addText(cb => {
+		cb.setPlaceholder('API key')
+			.setValue(this.plugin.settings.RawgKey)
+			.onChange(data => {
+				this.plugin.settings.RawgKey = data;
+				void this.plugin.saveSettings();
+			});
+	});
 
 		new Setting(containerEl)
 			.setName('SFW filter')

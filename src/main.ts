@@ -12,6 +12,7 @@ import { MobyGamesAPI } from './api/apis/MobyGamesAPI';
 import { MusicBrainzAPI } from './api/apis/MusicBrainzAPI';
 import { OMDbAPI } from './api/apis/OMDbAPI';
 import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
+import { RawgAPI } from './api/apis/RawgAPI';
 import { SteamAPI } from './api/apis/SteamAPI';
 import { WikipediaAPI } from './api/apis/WikipediaAPI';
 import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
@@ -55,6 +56,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new MALAPIManga(this));
 		this.apiManager.registerAPI(new WikipediaAPI(this));
 		this.apiManager.registerAPI(new MusicBrainzAPI(this));
+		this.apiManager.registerAPI(new RawgAPI(this));
 		this.apiManager.registerAPI(new SteamAPI(this));
 		this.apiManager.registerAPI(new BoardGameGeekAPI(this));
 		this.apiManager.registerAPI(new OpenLibraryAPI(this));

@@ -241,7 +241,7 @@
 			"format": "esm"
 		},
 		"src/models/GameModel.ts": {
-			"bytes": 1221,
+			"bytes": 1308,
 			"imports": [
 				{
 					"path": "src/utils/MediaType.ts",
@@ -355,7 +355,7 @@
 			"format": "esm"
 		},
 		"src/api/apis/MALAPI.ts": {
-			"bytes": 7054,
+			"bytes": 6936,
 			"imports": [
 				{
 					"path": "node_modules/openapi-fetch/dist/index.mjs",
@@ -608,6 +608,37 @@
 					"path": "src/utils/Utils.ts",
 					"kind": "import-statement",
 					"original": "src/utils/Utils"
+				},
+				{
+					"path": "src/utils/MediaType.ts",
+					"kind": "import-statement",
+					"original": "../../utils/MediaType"
+				},
+				{
+					"path": "src/api/APIModel.ts",
+					"kind": "import-statement",
+					"original": "../APIModel"
+				},
+				{
+					"path": "<runtime>",
+					"kind": "import-statement",
+					"external": true
+				}
+			],
+			"format": "esm"
+		},
+		"src/api/apis/RawgAPI.ts": {
+			"bytes": 5552,
+			"imports": [
+				{
+					"path": "obsidian",
+					"kind": "import-statement",
+					"external": true
+				},
+				{
+					"path": "src/models/GameModel.ts",
+					"kind": "import-statement",
+					"original": "../../models/GameModel"
 				},
 				{
 					"path": "src/utils/MediaType.ts",
@@ -4174,12 +4205,17 @@
 			"format": "esm"
 		},
 		"src/settings/Settings.ts": {
-			"bytes": 29698,
+			"bytes": 30144,
 			"imports": [
 				{
 					"path": "obsidian",
 					"kind": "import-statement",
 					"external": true
+				},
+				{
+					"path": "src/utils/MediaType.ts",
+					"kind": "import-statement",
+					"original": "src/utils/MediaType"
 				},
 				{
 					"path": "node_modules/svelte/src/index-client.js",
@@ -4486,7 +4522,7 @@
 			"format": "esm"
 		},
 		"src/main.ts": {
-			"bytes": 22458,
+			"bytes": 22556,
 			"imports": [
 				{
 					"path": "obsidian",
@@ -4547,6 +4583,11 @@
 					"path": "src/api/apis/OpenLibraryAPI.ts",
 					"kind": "import-statement",
 					"original": "./api/apis/OpenLibraryAPI"
+				},
+				{
+					"path": "src/api/apis/RawgAPI.ts",
+					"kind": "import-statement",
+					"original": "./api/apis/RawgAPI"
 				},
 				{
 					"path": "src/api/apis/SteamAPI.ts",
@@ -4739,13 +4780,18 @@
 					"path": "obsidian",
 					"kind": "require-call",
 					"external": true
+				},
+				{
+					"path": "obsidian",
+					"kind": "require-call",
+					"external": true
 				}
 			],
 			"exports": [],
 			"entryPoint": "src/main.ts",
 			"inputs": {
 				"src/main.ts": {
-					"bytesInOutput": 10131
+					"bytesInOutput": 10173
 				},
 				"src/api/APIManager.ts": {
 					"bytesInOutput": 745
@@ -4781,7 +4827,7 @@
 					"bytesInOutput": 6573
 				},
 				"src/models/GameModel.ts": {
-					"bytesInOutput": 594
+					"bytesInOutput": 667
 				},
 				"src/api/apis/GiantBombAPI.ts": {
 					"bytesInOutput": 2736
@@ -4816,6 +4862,9 @@
 				"src/api/apis/OpenLibraryAPI.ts": {
 					"bytesInOutput": 2228
 				},
+				"src/api/apis/RawgAPI.ts": {
+					"bytesInOutput": 2866
+				},
 				"src/api/apis/SteamAPI.ts": {
 					"bytesInOutput": 2073
 				},
@@ -4841,7 +4890,7 @@
 					"bytesInOutput": 892
 				},
 				"src/settings/Settings.ts": {
-					"bytesInOutput": 18131
+					"bytesInOutput": 18436
 				},
 				"node_modules/esm-env/index.js": {
 					"bytesInOutput": 0
@@ -4898,7 +4947,7 @@
 					"bytesInOutput": 408
 				},
 				"node_modules/svelte/src/internal/client/reactivity/batch.js": {
-					"bytesInOutput": 4070
+					"bytesInOutput": 4083
 				},
 				"node_modules/svelte/src/internal/client/reactivity/sources.js": {
 					"bytesInOutput": 1499
@@ -4988,7 +5037,7 @@
 					"bytesInOutput": 787
 				},
 				"node_modules/svelte/src/legacy/legacy-client.js": {
-					"bytesInOutput": 1178
+					"bytesInOutput": 1180
 				},
 				"node_modules/svelte/src/internal/client/dom/elements/custom-element.js": {
 					"bytesInOutput": 2644
@@ -5048,7 +5097,7 @@
 					"bytesInOutput": 576
 				}
 			},
-			"bytes": 184735
+			"bytes": 188037
 		}
 	}
 }
