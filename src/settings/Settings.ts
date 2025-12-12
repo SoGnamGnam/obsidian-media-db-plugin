@@ -13,8 +13,6 @@ import { FolderSuggest } from './suggesters/FolderSuggest';
 
 export interface MediaDbPluginSettings {
 	OMDbKey: string;
-	MobyGamesKey: string;
-	GiantBombKey: string;
 	ComicVineKey: string;
 	BoardgameGeekKey: string;
 	RawgKey: string;
@@ -28,10 +26,6 @@ export interface MediaDbPluginSettings {
 	MALAPI_disabledMediaTypes: MediaType[];
 	MALAPIManga_disabledMediaTypes: MediaType[];
 	ComicVineAPI_disabledMediaTypes: MediaType[];
-	SteamAPI_disabledMediaTypes: MediaType[];
-	MobyGamesAPI_disabledMediaTypes: MediaType[];
-	GiantBombAPI_disabledMediaTypes: MediaType[];
-	WikipediaAPI_disabledMediaTypes: MediaType[];
 	BoardgameGeekAPI_disabledMediaTypes: MediaType[];
 	RawgAPI_disabledMediaTypes: MediaType[];
 	MusicBrainzAPI_disabledMediaTypes: MediaType[];
@@ -40,7 +34,6 @@ export interface MediaDbPluginSettings {
 	seriesTemplate: string;
 	mangaTemplate: string;
 	gameTemplate: string;
-	wikiTemplate: string;
 	musicReleaseTemplate: string;
 	boardgameTemplate: string;
 	bookTemplate: string;
@@ -49,7 +42,6 @@ export interface MediaDbPluginSettings {
 	seriesFileNameTemplate: string;
 	mangaFileNameTemplate: string;
 	gameFileNameTemplate: string;
-	wikiFileNameTemplate: string;
 	musicReleaseFileNameTemplate: string;
 	boardgameFileNameTemplate: string;
 	bookFileNameTemplate: string;
@@ -58,7 +50,6 @@ export interface MediaDbPluginSettings {
 	seriesPropertyConversionRules: string;
 	mangaPropertyConversionRules: string;
 	gamePropertyConversionRules: string;
-	wikiPropertyConversionRules: string;
 	musicReleasePropertyConversionRules: string;
 	boardgamePropertyConversionRules: string;
 	bookPropertyConversionRules: string;
@@ -67,7 +58,6 @@ export interface MediaDbPluginSettings {
 	seriesFolder: string;
 	mangaFolder: string;
 	gameFolder: string;
-	wikiFolder: string;
 	musicReleaseFolder: string;
 	boardgameFolder: string;
 	bookFolder: string;
@@ -79,8 +69,6 @@ export interface MediaDbPluginSettings {
 
 const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	OMDbKey: '',
-	MobyGamesKey: '',
-	GiantBombKey: '',
 	ComicVineKey: '',
 	BoardgameGeekKey: '',
 	RawgKey: '',
@@ -94,10 +82,6 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	MALAPI_disabledMediaTypes: [],
 	MALAPIManga_disabledMediaTypes: [],
 	ComicVineAPI_disabledMediaTypes: [],
-	SteamAPI_disabledMediaTypes: [],
-	MobyGamesAPI_disabledMediaTypes: [],
-	GiantBombAPI_disabledMediaTypes: [],
-	WikipediaAPI_disabledMediaTypes: [],
 	BoardgameGeekAPI_disabledMediaTypes: [],
 	RawgAPI_disabledMediaTypes: [],
 	MusicBrainzAPI_disabledMediaTypes: [],
@@ -106,7 +90,6 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	seriesTemplate: '',
 	mangaTemplate: '',
 	gameTemplate: '',
-	wikiTemplate: '',
 	musicReleaseTemplate: '',
 	boardgameTemplate: '',
 	bookTemplate: '',
@@ -115,7 +98,6 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	seriesFileNameTemplate: '{{ title }} ({{ year }})',
 	mangaFileNameTemplate: '{{ title }} ({{ year }})',
 	gameFileNameTemplate: '{{ title }} ({{ year }})',
-	wikiFileNameTemplate: '{{ title }}',
 	musicReleaseFileNameTemplate: '{{ title }} (by {{ ENUM:artists }} - {{ year }})',
 	boardgameFileNameTemplate: '{{ title }} ({{ year }})',
 	bookFileNameTemplate: '{{ title }} ({{ year }})',
@@ -124,7 +106,6 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	seriesPropertyConversionRules: '',
 	mangaPropertyConversionRules: '',
 	gamePropertyConversionRules: '',
-	wikiPropertyConversionRules: '',
 	musicReleasePropertyConversionRules: '',
 	boardgamePropertyConversionRules: '',
 	bookPropertyConversionRules: '',
@@ -133,7 +114,6 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	seriesFolder: 'Media DB/series',
 	mangaFolder: 'Media DB/comics',
 	gameFolder: 'Media DB/games',
-	wikiFolder: 'Media DB/wiki',
 	musicReleaseFolder: 'Media DB/music',
 	boardgameFolder: 'Media DB/boardgames',
 	bookFolder: 'Media DB/books',
@@ -194,29 +174,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					});
 			});
 
-		new Setting(containerEl)
-			.setName('Moby Games key')
-			.setDesc('API key for "www.mobygames.com".')
-			.addText(cb => {
-				cb.setPlaceholder('API key')
-					.setValue(this.plugin.settings.MobyGamesKey)
-					.onChange(data => {
-						this.plugin.settings.MobyGamesKey = data;
-						void this.plugin.saveSettings();
-					});
-			});
-
-		new Setting(containerEl)
-			.setName('Giant Bomb Key')
-			.setDesc('API key for "www.giantbomb.com".')
-			.addText(cb => {
-				cb.setPlaceholder('API key')
-					.setValue(this.plugin.settings.GiantBombKey)
-					.onChange(data => {
-						this.plugin.settings.GiantBombKey = data;
-						void this.plugin.saveSettings();
-					});
-			});
 		new Setting(containerEl)
 			.setName('Comic Vine Key')
 			.setDesc('API key for "www.comicvine.gamespot.com".')
@@ -480,24 +437,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					});
 			});
 
-		new Setting(containerEl)
-			.setName('Wiki folder')
-			.setDesc('Where newly imported wiki articles should be placed.')
-			.addSearch(cb => {
-				const suggester = new FolderSuggest(this.app, cb.inputEl);
-				suggester.onSelect((folder, evt) => {
-					cb.setValue(folder.path);
-					this.plugin.settings.wikiFolder = folder.path;
-					void this.plugin.saveSettings();
-					suggester.close();
-				});
-				cb.setPlaceholder(DEFAULT_SETTINGS.wikiFolder)
-					.setValue(this.plugin.settings.wikiFolder)
-					.onChange(data => {
-						this.plugin.settings.wikiFolder = data;
-						void this.plugin.saveSettings();
-					});
-			});
+
 
 		new Setting(containerEl)
 			.setName('Music folder')
@@ -635,24 +575,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					});
 			});
 
-		new Setting(containerEl)
-			.setName('Wiki template')
-			.setDesc('Template file to be used when creating a new note for a wiki entry.')
-			.addSearch(cb => {
-				const suggester = new FileSuggest(this.app, cb.inputEl);
-				suggester.onSelect((file, evt) => {
-					cb.setValue(file.path);
-					this.plugin.settings.wikiTemplate = file.path;
-					void this.plugin.saveSettings();
-					suggester.close();
-				});
-				cb.setPlaceholder('Example: wikiTemplate.md')
-					.setValue(this.plugin.settings.wikiTemplate)
-					.onChange(data => {
-						this.plugin.settings.wikiTemplate = data;
-						void this.plugin.saveSettings();
-					});
-			});
 
 		new Setting(containerEl)
 			.setName('Music release template')
@@ -763,17 +685,6 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					});
 			});
 
-		new Setting(containerEl)
-			.setName('Wiki file name template')
-			.setDesc('Template for the file name used when creating a new note for a wiki entry.')
-			.addText(cb => {
-				cb.setPlaceholder(`Example: ${DEFAULT_SETTINGS.wikiFileNameTemplate}`)
-					.setValue(this.plugin.settings.wikiFileNameTemplate)
-					.onChange(data => {
-						this.plugin.settings.wikiFileNameTemplate = data;
-						void this.plugin.saveSettings();
-					});
-			});
 
 		new Setting(containerEl)
 			.setName('Music release file name template')
