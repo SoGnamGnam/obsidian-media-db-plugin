@@ -11,6 +11,7 @@ import { MusicBrainzAPI } from './api/apis/MusicBrainzAPI';
 import { OMDbAPI } from './api/apis/OMDbAPI';
 import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
 import { RawgAPI } from './api/apis/RawgAPI';
+import { GoogleBooksAPI } from './api/apis/GoogleBooksAPI';
 import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
 import type { MediaTypeModel } from './models/MediaTypeModel';
 import { PropertyMapper } from './settings/PropertyMapper';
@@ -54,6 +55,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager.registerAPI(new RawgAPI(this));
 		this.apiManager.registerAPI(new BoardGameGeekAPI(this));
 		this.apiManager.registerAPI(new OpenLibraryAPI(this));
+		this.apiManager.registerAPI(new GoogleBooksAPI(this));
 		this.apiManager.registerAPI(new ComicVineAPI(this));
 
 		this.mediaTypeManager = new MediaTypeManager();

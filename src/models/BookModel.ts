@@ -14,6 +14,10 @@ export class BookModel extends MediaTypeModel {
 	isbn: number;
 	isbn13: number;
 
+	genres: string[];
+	publisher: string;
+	language: string;
+
 	released: boolean;
 
 	userData: {
@@ -32,6 +36,10 @@ export class BookModel extends MediaTypeModel {
 		this.onlineRating = 0;
 		this.isbn = 0;
 		this.isbn13 = 0;
+
+		this.genres = [];
+		this.publisher = '';
+		this.language = '';
 
 		this.released = false;
 

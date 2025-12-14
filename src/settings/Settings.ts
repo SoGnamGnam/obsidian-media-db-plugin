@@ -16,18 +16,22 @@ export interface MediaDbPluginSettings {
 	ComicVineKey: string;
 	BoardgameGeekKey: string;
 	RawgKey: string;
+	GoogleBooksKey: string;
+
 	sfwFilter: boolean;
 	templates: boolean;
 	customDateFormat: string;
 	openNoteInNewTab: boolean;
 	useDefaultFrontMatter: boolean;
 	enableTemplaterIntegration: boolean;
+
 	OMDbAPI_disabledMediaTypes: MediaType[];
 	MALAPI_disabledMediaTypes: MediaType[];
 	MALAPIManga_disabledMediaTypes: MediaType[];
 	ComicVineAPI_disabledMediaTypes: MediaType[];
 	BoardgameGeekAPI_disabledMediaTypes: MediaType[];
 	RawgAPI_disabledMediaTypes: MediaType[];
+	GoogleBooksAPI_disabledMediaTypes: MediaType[];
 	MusicBrainzAPI_disabledMediaTypes: MediaType[];
 	OpenLibraryAPI_disabledMediaTypes: MediaType[];
 	movieTemplate: string;
@@ -72,20 +76,25 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	ComicVineKey: '',
 	BoardgameGeekKey: '',
 	RawgKey: '',
+	GoogleBooksKey: '',
+
 	sfwFilter: true,
 	templates: true,
 	customDateFormat: 'L',
 	openNoteInNewTab: true,
 	useDefaultFrontMatter: true,
 	enableTemplaterIntegration: false,
+
 	OMDbAPI_disabledMediaTypes: [],
 	MALAPI_disabledMediaTypes: [],
 	MALAPIManga_disabledMediaTypes: [],
 	ComicVineAPI_disabledMediaTypes: [],
 	BoardgameGeekAPI_disabledMediaTypes: [],
 	RawgAPI_disabledMediaTypes: [],
+	GoogleBooksAPI_disabledMediaTypes: [],
 	MusicBrainzAPI_disabledMediaTypes: [],
 	OpenLibraryAPI_disabledMediaTypes: [],
+
 	movieTemplate: '',
 	seriesTemplate: '',
 	mangaTemplate: '',
@@ -197,16 +206,27 @@ export class MediaDbSettingTab extends PluginSettingTab {
 					});
 			});
 		new Setting(containerEl)
-	.setName('RAWG API key')
-	.setDesc('API key for "rawg.io". Get one at https://rawg.io/apidocs')
-	.addText(cb => {
-		cb.setPlaceholder('API key')
-			.setValue(this.plugin.settings.RawgKey)
-			.onChange(data => {
-				this.plugin.settings.RawgKey = data;
-				void this.plugin.saveSettings();
-			});
-	});
+			.setName('RAWG API key')
+			.setDesc('API key for "rawg.io". Get one at https://rawg.io/apidocs')
+			.addText(cb => {
+				cb.setPlaceholder('API key')
+					.setValue(this.plugin.settings.RawgKey)
+					.onChange(data => {
+					this.plugin.settings.RawgKey = data;
+					void this.plugin.saveSettings();
+					});
+		});
+		new Setting(containerEl)
+			.setName('Google Books API key')
+			.setDesc('API key for Google Books API. Get one free at https://console.cloud.google.com/')
+			.addText(cb => {
+				cb.setPlaceholder('API key')
+					.setValue(this.plugin.settings.GoogleBooksKey)
+					.onChange(data => {
+						this.plugin.settings.GoogleBooksKey = data;
+						void this.plugin.saveSettings();
+					});
+		});
 
 		new Setting(containerEl)
 			.setName('SFW filter')
