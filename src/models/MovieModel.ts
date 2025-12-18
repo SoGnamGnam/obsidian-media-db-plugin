@@ -23,6 +23,9 @@ export class MovieModel extends MediaTypeModel {
 	streamingServices: string[];
 	premiere: string;
 
+	budget: number;
+	revenue: number;
+
 	userData: {
 		watched: boolean;
 		lastWatched: string;
@@ -48,6 +51,9 @@ export class MovieModel extends MediaTypeModel {
 		this.ageRating = '';
 		this.streamingServices = [];
 		this.premiere = '';
+
+		this.budget = 0;
+		this.revenue = 0;
 
 		this.userData = {
 			watched: false,

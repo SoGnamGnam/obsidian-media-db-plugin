@@ -12,6 +12,7 @@ import { OMDbAPI } from './api/apis/OMDbAPI';
 import { OpenLibraryAPI } from './api/apis/OpenLibraryAPI';
 import { RawgAPI } from './api/apis/RawgAPI';
 import { GoogleBooksAPI } from './api/apis/GoogleBooksAPI';
+import { TMDBAPI } from './api/apis/TmdbAPI';
 import { ConfirmOverwriteModal } from './modals/ConfirmOverwriteModal';
 import type { MediaTypeModel } from './models/MediaTypeModel';
 import { PropertyMapper } from './settings/PropertyMapper';
@@ -49,6 +50,7 @@ export default class MediaDbPlugin extends Plugin {
 		this.apiManager = new APIManager();
 		// register APIs
 		this.apiManager.registerAPI(new OMDbAPI(this));
+		this.apiManager.registerAPI(new TMDBAPI(this));
 		this.apiManager.registerAPI(new MALAPI(this));
 		this.apiManager.registerAPI(new MALAPIManga(this));
 		this.apiManager.registerAPI(new MusicBrainzAPI(this));

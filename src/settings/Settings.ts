@@ -17,6 +17,7 @@ export interface MediaDbPluginSettings {
 	BoardgameGeekKey: string;
 	RawgKey: string;
 	GoogleBooksKey: string;
+	TMDBKey: string;
 
 	sfwFilter: boolean;
 	templates: boolean;
@@ -34,6 +35,8 @@ export interface MediaDbPluginSettings {
 	GoogleBooksAPI_disabledMediaTypes: MediaType[];
 	MusicBrainzAPI_disabledMediaTypes: MediaType[];
 	OpenLibraryAPI_disabledMediaTypes: MediaType[];
+	TMDBAPI_disabledMediaTypes: MediaType[];
+
 	movieTemplate: string;
 	seriesTemplate: string;
 	mangaTemplate: string;
@@ -77,6 +80,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	BoardgameGeekKey: '',
 	RawgKey: '',
 	GoogleBooksKey: '',
+	TMDBKey: '',
 
 	sfwFilter: true,
 	templates: true,
@@ -94,6 +98,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	GoogleBooksAPI_disabledMediaTypes: [],
 	MusicBrainzAPI_disabledMediaTypes: [],
 	OpenLibraryAPI_disabledMediaTypes: [],
+	TMDBAPI_disabledMediaTypes: [],
 
 	movieTemplate: '',
 	seriesTemplate: '',
@@ -227,6 +232,23 @@ export class MediaDbSettingTab extends PluginSettingTab {
 						void this.plugin.saveSettings();
 					});
 		});
+
+		new Setting(containerEl)
+			.setName('TMDB API key')
+			.setDesc(
+				fragWithHTML(
+					'API Read Access Token (Bearer Token) for "themoviedb.org". ' +
+					'Get one free at <a href="https://www.themoviedb.org/settings/api">TMDB Settings</a>.'
+				)
+			)
+			.addText(cb => {
+				cb.setPlaceholder('API Read Access Token (Bearer Token)')
+					.setValue(this.plugin.settings.TMDBKey)
+					.onChange(data => {
+						this.plugin.settings.TMDBKey = data;
+						void this.plugin.saveSettings();
+					});
+			});
 
 		new Setting(containerEl)
 			.setName('SFW filter')

@@ -24,6 +24,11 @@ export class SeriesModel extends MediaTypeModel {
 	airedFrom: string;
 	airedTo: string;
 
+	createdBy: string[];
+	networks: string[];
+	numberOfSeasons: number;
+	status: string;
+
 	userData: {
 		watched: boolean;
 		lastWatched: string;
@@ -50,6 +55,11 @@ export class SeriesModel extends MediaTypeModel {
 		this.airing = false;
 		this.airedFrom = '';
 		this.airedTo = '';
+
+		this.createdBy = [];
+		this.networks = [];
+		this.numberOfSeasons = 0;
+		this.status = '';
 
 		this.userData = {
 			watched: false,
