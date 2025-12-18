@@ -15,6 +15,12 @@ export class BoardGameModel extends MediaTypeModel {
 	publishers: string[];
 	image?: string;
 
+	bggRank: number | null;
+	mechanics: string[];
+	expansions: string[];
+	designers: string[];
+	artists: string[];
+
 	released: boolean;
 
 	userData: {
@@ -33,6 +39,12 @@ export class BoardGameModel extends MediaTypeModel {
 		this.playtime = '';
 		this.publishers = [];
 		this.image = '';
+
+		this.bggRank = null;
+		this.mechanics = [];
+		this.expansions = [];
+		this.designers = [];
+		this.artists = [];
 
 		this.released = false;
 

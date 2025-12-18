@@ -5,7 +5,7 @@ import type { MediaTypeModel } from '../../models/MediaTypeModel';
 import { MediaType } from '../../utils/MediaType';
 import { APIModel } from '../APIModel';
 
-// sadly no open api schema available
+// BGG XML API v2 documentation: https://boardgamegeek.com/wiki/page/BGG_XML_API2
 
 export class BoardGameGeekAPI extends APIModel {
 	plugin: MediaDbPlugin;
@@ -16,14 +16,14 @@ export class BoardGameGeekAPI extends APIModel {
 		this.plugin = plugin;
 		this.apiName = 'BoardGameGeekAPI';
 		this.apiDescription = 'A free API for BoardGameGeek things.';
-		this.apiUrl = 'https://boardgamegeek.com/xmlapi/';
+		this.apiUrl = 'https://boardgamegeek.com/xmlapi2';
 		this.types = [MediaType.BoardGame];
 	}
 
 	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
 		console.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		const searchUrl = `${this.apiUrl}/search?search=${encodeURIComponent(title)}`;
+		const searchUrl = `${this.apiUrl}/search?query=${encodeURIComponent(title)}&type=boardgame`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 			headers: {
@@ -42,12 +42,15 @@ export class BoardGameGeekAPI extends APIModel {
 		const data = fetchData.text;
 		const response = new window.DOMParser().parseFromString(data, 'text/xml');
 
+		// console.debug(response);
+
 		const ret: MediaTypeModel[] = [];
 
-		for (const boardgame of Array.from(response.querySelectorAll('boardgame'))) {
-			const id = boardgame.attributes.getNamedItem('objectid')?.value;
-			const title = boardgame.querySelector('name[primary=true]')?.textContent ?? boardgame.querySelector('name')?.textContent ?? undefined;
-			const year = boardgame.querySelector('yearpublished')?.textContent ?? '';
+		for (const item of Array.from(response.querySelectorAll('item'))) {
+			const id = item.getAttribute('id') ?? undefined;
+			const title = item.querySelector('name[type="primary"]')?.getAttribute('value') ?? 
+			              item.querySelector('name')?.getAttribute('value') ?? undefined;
+			const year = item.querySelector('yearpublished')?.getAttribute('value') ?? '';
 
 			ret.push(
 				new BoardGameModel({
@@ -63,24 +66,19 @@ export class BoardGameGeekAPI extends APIModel {
 		// Fetch thumbnails using XMLApi2 batch request
 		if (ret.length > 0) {
 			const ids = ret.map(r => r.id).filter(Boolean).join(',');
-			
 			try {
-				const detailsUrl = `https://boardgamegeek.com/xmlapi2/thing?id=${ids}`;
-				
-				const detailsData = await requestUrl({ 
+				const detailsUrl = `${this.apiUrl}/thing?id=${ids}`;
+				const detailsData = await requestUrl({
 					url: detailsUrl,
 					headers: {
 						Authorization: `Bearer ${this.plugin.settings.BoardgameGeekKey}`,
 					},
 				});
-				
 				if (detailsData.status === 200) {
 					const detailsResponse = new window.DOMParser().parseFromString(detailsData.text, 'text/xml');
-					
 					for (const item of Array.from(detailsResponse.querySelectorAll('item'))) {
 						const itemId = item.getAttribute('id');
 						const thumbnail = item.querySelector('thumbnail')?.textContent;
-						
 						// Find matching model and update image
 						const model = ret.find(r => r.id === itemId);
 						if (model && thumbnail) {
@@ -100,7 +98,7 @@ export class BoardGameGeekAPI extends APIModel {
 	async getById(id: string): Promise<MediaTypeModel> {
 		console.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const searchUrl = `${this.apiUrl}/boardgame/${encodeURIComponent(id)}?stats=1`;
+		const searchUrl = `${this.apiUrl}/thing?id=${encodeURIComponent(id)}&stats=1`;
 		const fetchData = await requestUrl({
 			url: searchUrl,
 			headers: {
@@ -118,26 +116,68 @@ export class BoardGameGeekAPI extends APIModel {
 
 		const data = fetchData.text;
 		const response = new window.DOMParser().parseFromString(data, 'text/xml');
+		// console.debug(response);
 
-		const boardgame = response.querySelector('boardgame');
-		if (!boardgame) {
+		const item = response.querySelector('item');
+		if (!item) {
 			throw Error(`MDB | Received invalid data from ${this.apiName}.`);
 		}
 
-		const title = boardgame.querySelector('name[primary=true]')?.textContent;
-		const year = boardgame.querySelector('yearpublished')?.textContent ?? '';
-		const image = boardgame.querySelector('image')?.textContent ?? undefined;
-		const onlineRating = Number.parseFloat(boardgame.querySelector('statistics ratings average')?.textContent ?? '0');
-		const genres = Array.from(boardgame.querySelectorAll('boardgamecategory'))
-			.map(n => n.textContent)
-			.filter(n => n !== null);
-		const complexityRating = Number.parseFloat(boardgame.querySelector('averageweight')?.textContent ?? '0');
-		const minPlayers = Number.parseFloat(boardgame.querySelector('minplayers')?.textContent ?? '0');
-		const maxPlayers = Number.parseFloat(boardgame.querySelector('maxplayers')?.textContent ?? '0');
-		const playtime = (boardgame.querySelector('playingtime')?.textContent ?? 'unknown') + ' minutes';
-		const publishers = Array.from(boardgame.querySelectorAll('boardgamepublisher'))
-			.map(n => n.textContent)
-			.filter(n => n !== null);
+		const title = item.querySelector('name[type="primary"]')?.getAttribute('value') ?? undefined;
+		const year = item.querySelector('yearpublished')?.getAttribute('value') ?? '';
+		const image = item.querySelector('image')?.textContent ?? undefined;
+		const onlineRating = Number.parseFloat(
+			item.querySelector('statistics ratings average')?.getAttribute('value') ?? '0'
+		);
+		
+		// Categories (genres)
+		const genres = Array.from(item.querySelectorAll('link[type="boardgamecategory"]'))
+			.map(n => n.getAttribute('value'))
+			.filter((n): n is string => n !== null);
+		
+		// Complexity rating (weight)
+		const complexityRating = Number.parseFloat(
+			item.querySelector('statistics ratings averageweight')?.getAttribute('value') ?? '0'
+		);
+		
+		// Player count
+		const minPlayers = Number.parseInt(item.querySelector('minplayers')?.getAttribute('value') ?? '0', 10);
+		const maxPlayers = Number.parseInt(item.querySelector('maxplayers')?.getAttribute('value') ?? '0', 10);
+		
+		// Playtime
+		const playtime = (item.querySelector('playingtime')?.getAttribute('value') ?? 'unknown') + ' minutes';
+		
+		// Publishers
+		const publishers = Array.from(item.querySelectorAll('link[type="boardgamepublisher"]'))
+			.map(n => n.getAttribute('value'))
+			.filter((n): n is string => n !== null);
+
+		// BGG Rank - get the "Board Game Rank" specifically
+		const bggRankElement = item.querySelector('statistics ratings ranks rank[name="boardgame"]');
+		const bggRankValue = bggRankElement?.getAttribute('value');
+		const bggRank = bggRankValue && bggRankValue !== 'Not Ranked' 
+			? Number.parseInt(bggRankValue, 10) 
+			: null;
+
+		// Mechanics
+		const mechanics = Array.from(item.querySelectorAll('link[type="boardgamemechanic"]'))
+			.map(n => n.getAttribute('value'))
+			.filter((n): n is string => n !== null);
+
+		// Expansions
+		const expansions = Array.from(item.querySelectorAll('link[type="boardgameexpansion"]'))
+			.map(n => n.getAttribute('value'))
+			.filter((n): n is string => n !== null);
+
+		// Designers
+		const designers = Array.from(item.querySelectorAll('link[type="boardgamedesigner"]'))
+			.map(n => n.getAttribute('value'))
+			.filter((n): n is string => n !== null);
+
+		// Artists
+		const artists = Array.from(item.querySelectorAll('link[type="boardgameartist"]'))
+			.map(n => n.getAttribute('value'))
+			.filter((n): n is string => n !== null);
 
 		return new BoardGameModel({
 			title: title ?? undefined,
@@ -156,6 +196,13 @@ export class BoardGameGeekAPI extends APIModel {
 			publishers: publishers,
 			image: image,
 
+			// New properties
+			bggRank: bggRank,
+			mechanics: mechanics,
+			expansions: expansions,
+			designers: designers,
+			artists: artists,
+
 			released: true,
 
 			userData: {
@@ -164,6 +211,7 @@ export class BoardGameGeekAPI extends APIModel {
 			},
 		});
 	}
+
 	getDisabledMediaTypes(): MediaType[] {
 		return this.plugin.settings.BoardgameGeekAPI_disabledMediaTypes;
 	}
