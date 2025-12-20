@@ -10,6 +10,7 @@ export class BookModel extends MediaTypeModel {
 	plot: string;
 	pages: number;
 	image: string;
+	cover: string;
 	onlineRating: number;
 	isbn: number;
 	isbn13: number;
@@ -33,6 +34,7 @@ export class BookModel extends MediaTypeModel {
 		this.plot = '';
 		this.pages = 0;
 		this.image = '';
+		this.cover = '';
 		this.onlineRating = 0;
 		this.isbn = 0;
 		this.isbn13 = 0;

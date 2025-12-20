@@ -15,6 +15,7 @@ export class SeriesModel extends MediaTypeModel {
 	onlineRating: number;
 	actors: string[];
 	image: string;
+	cover: string;
 
 	released: boolean;
 	country: string[];
@@ -47,6 +48,7 @@ export class SeriesModel extends MediaTypeModel {
 		this.onlineRating = 0;
 		this.actors = [];
 		this.image = '';
+		this.cover = '';
 
 		this.released = false;
 		this.country = [];

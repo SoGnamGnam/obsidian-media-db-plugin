@@ -10,6 +10,7 @@ export abstract class MediaTypeModel {
 	url: string;
 	id: string;
 	image?: string;
+	cover?: string;
 
 	userData: object;
 
@@ -23,6 +24,7 @@ export abstract class MediaTypeModel {
 		this.url = '';
 		this.id = '';
 		this.image = '';
+		this.cover = '';
 
 		this.userData = {};
 	}
@@ -35,8 +37,13 @@ export abstract class MediaTypeModel {
 	abstract getTags(): string[];
 
 	toMetaDataObject(): Record<string, unknown> {
-		return { ...this.getWithOutUserData(), ...this.userData, tags: this.getTags().join('/') };
-	}
+	return { 
+		...this.getWithOutUserData(), 
+		...this.userData, 
+		tags: this.getTags().join('/'),
+		cover: this.image // added this for pretty properties
+	};
+}
 
 	getWithOutUserData(): Record<string, unknown> {
 		const copy = structuredClone(this) as Record<string, unknown>;

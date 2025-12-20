@@ -14,6 +14,7 @@ export class BoardGameModel extends MediaTypeModel {
 	playtime: string;
 	publishers: string[];
 	image?: string;
+	cover?: string;
 
 	bggRank: number | null;
 	mechanics: string[];
@@ -39,6 +40,7 @@ export class BoardGameModel extends MediaTypeModel {
 		this.playtime = '';
 		this.publishers = [];
 		this.image = '';
+		this.cover = '';
 
 		this.bggRank = null;
 		this.mechanics = [];
