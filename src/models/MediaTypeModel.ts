@@ -50,4 +50,8 @@ export abstract class MediaTypeModel {
 		delete copy.userData;
 		return copy;
 	}
+
+	getBodyContent(): string {
+		return '';
+	}
 }

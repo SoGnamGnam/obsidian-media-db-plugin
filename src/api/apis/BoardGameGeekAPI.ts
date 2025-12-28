@@ -179,6 +179,23 @@ export class BoardGameGeekAPI extends APIModel {
 			.map(n => n.getAttribute('value'))
 			.filter((n): n is string => n !== null);
 
+		// Description - decode common HTML entities
+		let description = item.querySelector('description')?.textContent ?? '';
+		description = description
+		.replace(/&#10;/g, '\n')           // newline
+		.replace(/&amp;/g, '&')            // ampersand
+		.replace(/&lt;/g, '<')             // less than
+		.replace(/&gt;/g, '>')             // greater than
+		.replace(/&quot;/g, '"')           // quote
+		.replace(/&rsquo;/g, "'")          // right single quote
+		.replace(/&lsquo;/g, "'")          // left single quote
+		.replace(/&rdquo;/g, '"')          // right double quote
+		.replace(/&ldquo;/g, '"')          // left double quote
+		.replace(/&mdash;/g, '—')          // em dash
+		.replace(/&ndash;/g, '–')          // en dash
+		.replace(/&hellip;/g, '...')       // ellipsis
+		.trim();
+
 		return new BoardGameModel({
 			title: title ?? undefined,
 			englishTitle: title ?? undefined,
@@ -195,6 +212,7 @@ export class BoardGameGeekAPI extends APIModel {
 			playtime: playtime,
 			publishers: publishers,
 			image: image,
+			description: description,
 
 			// New properties
 			bggRank: bggRank,

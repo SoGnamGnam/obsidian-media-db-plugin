@@ -94,7 +94,7 @@
 			"format": "esm"
 		},
 		"src/models/MediaTypeModel.ts": {
-			"bytes": 1130,
+			"bytes": 1179,
 			"imports": [
 				{
 					"path": "<runtime>",
@@ -105,7 +105,7 @@
 			"format": "esm"
 		},
 		"src/models/BoardGameModel.ts": {
-			"bytes": 1625,
+			"bytes": 2015,
 			"imports": [
 				{
 					"path": "src/utils/MediaType.ts",
@@ -142,7 +142,7 @@
 			"format": "esm"
 		},
 		"src/api/apis/BoardGameGeekAPI.ts": {
-			"bytes": 7375,
+			"bytes": 8213,
 			"imports": [
 				{
 					"path": "obsidian",
@@ -4429,7 +4429,7 @@
 			"format": "esm"
 		},
 		"src/main.ts": {
-			"bytes": 22333,
+			"bytes": 22456,
 			"imports": [
 				{
 					"path": "obsidian",
@@ -4688,13 +4688,13 @@
 			"entryPoint": "src/main.ts",
 			"inputs": {
 				"src/main.ts": {
-					"bytesInOutput": 10089
+					"bytesInOutput": 10127
 				},
 				"src/api/APIManager.ts": {
 					"bytesInOutput": 745
 				},
 				"src/api/apis/BoardGameGeekAPI.ts": {
-					"bytesInOutput": 4673
+					"bytesInOutput": 5077
 				},
 				"node_modules/iso-639-2/2.js": {
 					"bytesInOutput": 20576
@@ -4706,10 +4706,10 @@
 					"bytesInOutput": 3365
 				},
 				"src/models/MediaTypeModel.ts": {
-					"bytesInOutput": 575
+					"bytesInOutput": 601
 				},
 				"src/models/BoardGameModel.ts": {
-					"bytesInOutput": 903
+					"bytesInOutput": 1125
 				},
 				"src/api/APIModel.ts": {
 					"bytesInOutput": 265
@@ -4835,7 +4835,7 @@
 					"bytesInOutput": 408
 				},
 				"node_modules/svelte/src/internal/client/reactivity/batch.js": {
-					"bytesInOutput": 4070
+					"bytesInOutput": 4083
 				},
 				"node_modules/svelte/src/internal/client/reactivity/sources.js": {
 					"bytesInOutput": 1499
@@ -4925,7 +4925,7 @@
 					"bytesInOutput": 787
 				},
 				"node_modules/svelte/src/legacy/legacy-client.js": {
-					"bytesInOutput": 1178
+					"bytesInOutput": 1180
 				},
 				"node_modules/svelte/src/internal/client/dom/elements/custom-element.js": {
 					"bytesInOutput": 2644
@@ -4985,7 +4985,7 @@
 					"bytesInOutput": 576
 				}
 			},
-			"bytes": 189775
+			"bytes": 190481
 		}
 	}
 }

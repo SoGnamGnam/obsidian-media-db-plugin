@@ -391,6 +391,11 @@ export default class MediaDbPlugin extends Plugin {
 		let fileContent = '';
 		template = options.attachTemplate ? template : '';
 
+		const bodyContent = mediaTypeModel.getBodyContent();
+		if (bodyContent) {
+			fileContent = bodyContent + '\n';
+		}
+
 		({ fileMetadata, fileContent } = await this.attachFile(fileMetadata, fileContent, options.attachFile));
 		({ fileMetadata, fileContent } = await this.attachTemplate(fileMetadata, fileContent, template));
 

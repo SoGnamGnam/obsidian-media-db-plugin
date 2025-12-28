@@ -13,6 +13,7 @@ export class BoardGameModel extends MediaTypeModel {
 	maxPlayers: number;
 	playtime: string;
 	publishers: string[];
+	description: string;
 	image?: string;
 	cover?: string;
 
@@ -39,6 +40,7 @@ export class BoardGameModel extends MediaTypeModel {
 		this.maxPlayers = 0;
 		this.playtime = '';
 		this.publishers = [];
+		this.description = '';
 		this.image = '';
 		this.cover = '';
 
@@ -75,4 +77,18 @@ export class BoardGameModel extends MediaTypeModel {
 	getSummary(): string {
 		return this.englishTitle + ' (' + this.year + ')';
 	}
+	
+	override getWithOutUserData(): Record<string, unknown> {
+		const copy = structuredClone(this) as Record<string, unknown>;
+		delete copy.userData;
+		delete copy.description;
+		return copy;
+	}
+	
+	override getBodyContent(): string {
+	if (this.description) {
+		return `## Description\n\n${this.description}\n`;
+	}
+	return '';
+}
 }
