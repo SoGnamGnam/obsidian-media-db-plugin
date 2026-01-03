@@ -144,6 +144,9 @@ export class BoardGameGeekAPI extends APIModel {
 		const minPlayers = Number.parseInt(item.querySelector('minplayers')?.getAttribute('value') ?? '0', 10);
 		const maxPlayers = Number.parseInt(item.querySelector('maxplayers')?.getAttribute('value') ?? '0', 10);
 		
+		// Minimum Age
+		const minAge = Number.parseInt(item.querySelector('minage')?.getAttribute('value') ?? '0', 10);
+
 		// Playtime
 		const playtime = (item.querySelector('playingtime')?.getAttribute('value') ?? 'unknown') + ' minutes';
 		
@@ -209,6 +212,7 @@ export class BoardGameGeekAPI extends APIModel {
 			complexityRating: complexityRating,
 			minPlayers: minPlayers,
 			maxPlayers: maxPlayers,
+			minAge: minAge,
 			playtime: playtime,
 			publishers: publishers,
 			image: image,

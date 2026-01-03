@@ -105,7 +105,7 @@
 			"format": "esm"
 		},
 		"src/models/BoardGameModel.ts": {
-			"bytes": 2015,
+			"bytes": 2067,
 			"imports": [
 				{
 					"path": "src/utils/MediaType.ts",
@@ -142,7 +142,7 @@
 			"format": "esm"
 		},
 		"src/api/apis/BoardGameGeekAPI.ts": {
-			"bytes": 8213,
+			"bytes": 8352,
 			"imports": [
 				{
 					"path": "obsidian",
@@ -4694,7 +4694,7 @@
 					"bytesInOutput": 745
 				},
 				"src/api/apis/BoardGameGeekAPI.ts": {
-					"bytesInOutput": 5077
+					"bytesInOutput": 5204
 				},
 				"node_modules/iso-639-2/2.js": {
 					"bytesInOutput": 20576
@@ -4709,7 +4709,7 @@
 					"bytesInOutput": 601
 				},
 				"src/models/BoardGameModel.ts": {
-					"bytesInOutput": 1125
+					"bytesInOutput": 1183
 				},
 				"src/api/APIModel.ts": {
 					"bytesInOutput": 265
@@ -4985,7 +4985,7 @@
 					"bytesInOutput": 576
 				}
 			},
-			"bytes": 190481
+			"bytes": 190666
 		}
 	}
 }

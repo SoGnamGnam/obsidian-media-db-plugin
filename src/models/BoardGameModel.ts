@@ -11,6 +11,7 @@ export class BoardGameModel extends MediaTypeModel {
 	complexityRating: number;
 	minPlayers: number;
 	maxPlayers: number;
+	minAge: number;
 	playtime: string;
 	publishers: string[];
 	description: string;
@@ -38,6 +39,7 @@ export class BoardGameModel extends MediaTypeModel {
 		this.complexityRating = 0;
 		this.minPlayers = 0;
 		this.maxPlayers = 0;
+		this.minAge = obj.minAge ?? 0;
 		this.playtime = '';
 		this.publishers = [];
 		this.description = '';
