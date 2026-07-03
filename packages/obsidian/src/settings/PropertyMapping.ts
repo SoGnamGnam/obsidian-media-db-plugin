@@ -66,7 +66,7 @@ export class PropertyMappingModel {
 		}
 		// remapped properties may not have the same name as any original property
 		for (const property of this.getMappedProperties()) {
-			const propertiesWithSameTarget = this.properties.filter(x => x.newProperty === property.property);
+			const propertiesWithSameTarget = this.properties.filter(x => x.property === property.newProperty);
 			if (propertiesWithSameTarget.length === 0) {
 				// all good
 			} else {

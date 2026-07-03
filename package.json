@@ -13,8 +13,8 @@
 		"format:check": "prettier --check .",
 		"lint": "eslint --max-warnings=0 --no-warn-ignored packages/obsidian/src/**",
 		"lint:fix": "eslint --max-warnings=0 --fix --no-warn-ignored packages/obsidian/src/**",
-		"check": "bun run format:check && bun run typecheck && bun run lint",
-		"check:fix": "bun run format && bun run typecheck && bun run lint:fix",
+		"check": "bun run format:check && bun run typecheck && bun run lint && bun run test:log",
+		"check:fix": "bun run format && bun run typecheck && bun run lint:fix && bun run test:log",
 		"release": "lemons-automation release"
 	},
 	"keywords": [],
