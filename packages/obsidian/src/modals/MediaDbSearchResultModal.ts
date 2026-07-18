@@ -31,7 +31,7 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 		this.submitCallback = submitCallback;
 	}
 
-	setCustomCloseCallback(closeCallback: (err?: Error) => void): void {
+	setCloseCb(closeCallback: (err?: Error) => void): void {
 		this.closeCallback = closeCallback;
 	}
 
@@ -43,10 +43,10 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	renderElement(item: MediaTypeModel, el: HTMLElement): void {
 		// Create a container with flexbox layout for image + text
 		el.addClass('media-db-plugin-select-element-with-image');
-		
+
 		// Create image container
 		const imageContainer = el.createDiv({ cls: 'media-db-plugin-select-element-image-container' });
-		
+
 		// Add image if available
 		if (item.image && typeof item.image === 'string' && item.image.startsWith('http')) {
 			const img = imageContainer.createEl('img', {
@@ -58,16 +58,16 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 				},
 			});
 			// Handle image load errors
-			img.onerror = () => {
-				img.style.display = 'none';
-				imageContainer.createDiv({ 
+			img.onerror = (): void => {
+				img.hide();
+				imageContainer.createDiv({
 					cls: 'media-db-plugin-select-element-image-placeholder',
 					text: '📷',
 				});
 			};
 		} else {
 			// Show placeholder if no image
-			imageContainer.createDiv({ 
+			imageContainer.createDiv({
 				cls: 'media-db-plugin-select-element-image-placeholder',
 				text: '📷',
 			});

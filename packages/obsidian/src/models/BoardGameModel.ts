@@ -79,18 +79,18 @@ export class BoardGameModel extends MediaTypeModel {
 	getSummary(): string {
 		return this.englishTitle + ' (' + this.year + ')';
 	}
-	
+
 	override getWithOutUserData(): Record<string, unknown> {
 		const copy = structuredClone(this) as Record<string, unknown>;
 		delete copy.userData;
 		delete copy.description;
 		return copy;
 	}
-	
+
 	override getBodyContent(): string {
-	if (this.description) {
-		return `## Description\n\n${this.description}\n`;
+		if (this.description) {
+			return `## Description\n\n${this.description}\n`;
+		}
+		return '';
 	}
-	return '';
-}
 }

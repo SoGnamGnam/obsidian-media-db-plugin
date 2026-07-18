@@ -1,18 +1,19 @@
 import type { App } from 'obsidian';
 import { TFile } from 'obsidian';
 import { TFolder } from 'obsidian';
-import { BoardGameModel } from '../models/BoardGameModel';
-import { BookModel } from '../models/BookModel';
-import { ComicMangaModel } from '../models/ComicMangaModel';
-import { GameModel } from '../models/GameModel';
-import type { MediaTypeModel } from '../models/MediaTypeModel';
-import { MovieModel } from '../models/MovieModel';
-import { MusicReleaseModel } from '../models/MusicReleaseModel';
-import { SeriesModel } from '../models/SeriesModel';
-import type { MediaDbPluginSettings } from '../settings/Settings';
-import { ILLEGAL_FILENAME_CHARACTERS } from './IllegalFilenameCharactersList';
-import { MediaType } from './MediaType';
-import { replaceTags } from './Utils';
+import { BoardGameModel } from 'packages/obsidian/src/models/BoardGameModel';
+import { BookModel } from 'packages/obsidian/src/models/BookModel';
+import { ComicMangaModel } from 'packages/obsidian/src/models/ComicMangaModel';
+import { GameModel } from 'packages/obsidian/src/models/GameModel';
+import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
+import { MovieModel } from 'packages/obsidian/src/models/MovieModel';
+import { MusicReleaseModel } from 'packages/obsidian/src/models/MusicReleaseModel';
+import { SeasonModel } from 'packages/obsidian/src/models/SeasonModel';
+import { SeriesModel } from 'packages/obsidian/src/models/SeriesModel';
+import type { MediaDbPluginSettings } from 'packages/obsidian/src/settings/Settings';
+import { ILLEGAL_FILENAME_CHARACTERS } from 'packages/obsidian/src/utils/IllegalFilenameCharactersList';
+import { MediaType } from 'packages/obsidian/src/utils/MediaType';
+import { replaceTags } from 'packages/obsidian/src/utils/Utils';
 
 // All media types in alphabetical order
 export const MEDIA_TYPES: MediaType[] = [

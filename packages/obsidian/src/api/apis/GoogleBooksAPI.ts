@@ -1,9 +1,14 @@
 import { requestUrl } from 'obsidian';
-import type MediaDbPlugin from '../../main';
-import { BookModel } from '../../models/BookModel';
-import type { MediaTypeModel } from '../../models/MediaTypeModel';
-import { MediaType } from '../../utils/MediaType';
-import { APIModel } from '../APIModel';
+import { APIModel } from 'packages/obsidian/src/api/APIModel';
+import type MediaDbPlugin from 'packages/obsidian/src/main';
+import { BookModel } from 'packages/obsidian/src/models/BookModel';
+import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
+import { Logger } from 'packages/obsidian/src/utils/Logger';
+import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
+import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
+import { MediaType } from 'packages/obsidian/src/utils/MediaType';
+import type { Result } from 'packages/obsidian/src/utils/result';
+import { err, fromPromise, ok } from 'packages/obsidian/src/utils/result';
 
 interface GoogleBooksSearchResponse {
 	kind: string;
@@ -104,46 +109,55 @@ export class GoogleBooksAPI extends APIModel {
 
 		this.plugin = plugin;
 		this.apiName = 'GoogleBooksAPI';
-		this.apiDescription = 'Google Books API - Search and access the world\'s most comprehensive index of full-text books.';
+		this.apiDescription = "Google Books API - Search and access the world's most comprehensive index of full-text books.";
 		this.apiUrl = 'https://books.google.com/';
 		this.types = [MediaType.Book];
 	}
 
-	async searchByTitle(title: string): Promise<MediaTypeModel[]> {
-		console.log(`MDB | api "${this.apiName}" queried by Title`);
+	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], MDBError>> {
+		Logger.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		if (!this.plugin.settings.GoogleBooksKey) {
-			throw new Error(`MDB | API key for ${this.apiName} missing.`);
+		const searchUrl = `${this.BASE_URL}/volumes?q=${encodeURIComponent(title)}&maxResults=20`;
+
+		const fetchDataResult = await fromPromise(
+			requestUrl({
+				url: searchUrl,
+			}),
+			cause =>
+				toMdbError(cause, {
+					kind: MDBErrorKind.Network,
+					message: `MDB | Network error querying ${this.apiName}`,
+					userMessage: `Network error querying ${this.apiName}`,
+					context: { apiName: this.apiName, title },
+				}),
+		);
+		if (!fetchDataResult.ok) {
+			return err(fetchDataResult.error);
 		}
-
-		const searchUrl = `${this.BASE_URL}/volumes?q=${encodeURIComponent(title)}&maxResults=20&key=${this.plugin.settings.GoogleBooksKey}`;
-
-		const response = await requestUrl({
-			url: searchUrl,
-			method: 'GET',
-		});
-
-		if (response.status === 401 || response.status === 403) {
-			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
-		}
+		const response = fetchDataResult.value;
 		if (response.status !== 200) {
-			throw Error(`MDB | Received status code ${response.status} from ${this.apiName}.`);
+			return err({
+				kind: MDBErrorKind.Api,
+				message: `MDB | Received status code ${response.status} from ${this.apiName}.`,
+				userMessage: `Received status code ${response.status} from ${this.apiName}.`,
+				context: { apiName: this.apiName, status: response.status },
+			});
 		}
 
 		const data = response.json as GoogleBooksSearchResponse;
 
 		if (!data || data.totalItems === 0 || !data.items) {
-			return [];
+			return ok([]);
 		}
 
 		const results: MediaTypeModel[] = [];
 
 		for (const item of data.items) {
 			const volumeInfo = item.volumeInfo;
-			
+
 			const year = this.extractYear(volumeInfo.publishedDate);
-			
-			let thumbnailUrl = volumeInfo.imageLinks?.thumbnail || volumeInfo.imageLinks?.smallThumbnail;
+
+			let thumbnailUrl = volumeInfo.imageLinks?.thumbnail ?? volumeInfo.imageLinks?.smallThumbnail;
 			if (thumbnailUrl) {
 				thumbnailUrl = thumbnailUrl.replace('http://', 'https://');
 			}
@@ -161,86 +175,100 @@ export class GoogleBooksAPI extends APIModel {
 			);
 		}
 
-		return results;
+		return ok(results);
 	}
 
-	async getById(id: string): Promise<MediaTypeModel> {
-		console.log(`MDB | api "${this.apiName}" queried by ID`);
+	async getById(id: string): Promise<Result<MediaTypeModel, MDBError>> {
+		Logger.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		if (!this.plugin.settings.GoogleBooksKey) {
-			throw new Error(`MDB | API key for ${this.apiName} missing.`);
+		const detailUrl = `${this.BASE_URL}/volumes/${encodeURIComponent(id)}`;
+
+		const fetchDataResult = await fromPromise(
+			requestUrl({
+				url: detailUrl,
+			}),
+			cause =>
+				toMdbError(cause, {
+					kind: MDBErrorKind.Network,
+					message: `MDB | Network error querying ${this.apiName}`,
+					userMessage: `Network error querying ${this.apiName}`,
+					context: { apiName: this.apiName, id },
+				}),
+		);
+		if (!fetchDataResult.ok) {
+			return err(fetchDataResult.error);
 		}
-
-		const detailUrl = `${this.BASE_URL}/volumes/${id}?key=${this.plugin.settings.GoogleBooksKey}`;
-
-		const response = await requestUrl({
-			url: detailUrl,
-			method: 'GET',
-		});
-
-		if (response.status === 401 || response.status === 403) {
-			throw Error(`MDB | Authentication for ${this.apiName} failed. Check the API key.`);
-		}
-		if (response.status === 404) {
-			throw Error(`MDB | Volume with ID ${id} not found on ${this.apiName}.`);
-		}
+		const response = fetchDataResult.value;
 		if (response.status !== 200) {
-			throw Error(`MDB | Received status code ${response.status} from ${this.apiName}.`);
+			return err({
+				kind: MDBErrorKind.Api,
+				message: `MDB | Received status code ${response.status} from ${this.apiName}.`,
+				userMessage: `Received status code ${response.status} from ${this.apiName}.`,
+				context: { apiName: this.apiName, status: response.status, id },
+			});
 		}
 
 		const data = response.json as GoogleBooksVolume;
 
-		if (!data || !data.volumeInfo) {
-			throw Error(`MDB | No data received from ${this.apiName}.`);
+		if (!data?.volumeInfo) {
+			return err({
+				kind: MDBErrorKind.Api,
+				message: `MDB | No data received from ${this.apiName}.`,
+				userMessage: `No data received from ${this.apiName}.`,
+				context: { apiName: this.apiName, id },
+			});
 		}
 
 		const volumeInfo = data.volumeInfo;
-		
+
 		const year = this.extractYear(volumeInfo.publishedDate);
-		
+
 		const isbn10 = this.extractIdentifier(volumeInfo.industryIdentifiers, 'ISBN_10');
 		const isbn13 = this.extractIdentifier(volumeInfo.industryIdentifiers, 'ISBN_13');
 
-		let imageUrl = volumeInfo.imageLinks?.large 
-			|| volumeInfo.imageLinks?.medium 
-			|| volumeInfo.imageLinks?.small 
-			|| volumeInfo.imageLinks?.thumbnail 
-			|| volumeInfo.imageLinks?.smallThumbnail;
-		
+		let imageUrl =
+			volumeInfo.imageLinks?.large ??
+			volumeInfo.imageLinks?.medium ??
+			volumeInfo.imageLinks?.small ??
+			volumeInfo.imageLinks?.thumbnail ??
+			volumeInfo.imageLinks?.smallThumbnail;
+
 		if (imageUrl) {
 			imageUrl = imageUrl.replace('http://', 'https://');
 		}
 
 		const plot = this.cleanHtml(volumeInfo.description);
 
-		return new BookModel({
-			title: volumeInfo.title,
-			englishTitle: volumeInfo.subtitle ? `${volumeInfo.title}: ${volumeInfo.subtitle}` : volumeInfo.title,
-			year: year,
-			dataSource: this.apiName,
-			url: volumeInfo.canonicalVolumeLink || `https://books.google.com/books?id=${id}`,
-			id: id,
+		return ok(
+			new BookModel({
+				title: volumeInfo.title,
+				englishTitle: volumeInfo.subtitle ? `${volumeInfo.title}: ${volumeInfo.subtitle}` : volumeInfo.title,
+				year: year,
+				dataSource: this.apiName,
+				url: volumeInfo.canonicalVolumeLink ?? `https://books.google.com/books?id=${id}`,
+				id: id,
 
-			author: volumeInfo.authors?.join(', ') ?? 'Unknown',
-			plot: plot,
-			pages: volumeInfo.pageCount,
-			onlineRating: volumeInfo.averageRating,
-			image: imageUrl,
-			isbn: isbn10 ? Number(isbn10) : undefined,
-			isbn13: isbn13 ? Number(isbn13) : undefined,
+				author: volumeInfo.authors?.join(', ') ?? 'Unknown',
+				plot: plot,
+				pages: volumeInfo.pageCount,
+				onlineRating: volumeInfo.averageRating,
+				image: imageUrl,
+				isbn: isbn10,
+				isbn13: isbn13,
 
-			genres: volumeInfo.categories ?? [],
-			publisher: volumeInfo.publisher ?? '',
-			language: this.formatLanguage(volumeInfo.language),
+				genres: volumeInfo.categories ?? [],
+				publisher: volumeInfo.publisher ?? '',
+				language: this.formatLanguage(volumeInfo.language),
 
-			released: true,
+				released: true,
 
-			userData: {
-				read: false,
-				lastRead: '',
-				personalRating: 0,
-			},
-		});
+				userData: {
+					read: false,
+					lastRead: '',
+					personalRating: 0,
+				},
+			}),
+		);
 	}
 
 	private extractYear(publishedDate?: string): string {
@@ -250,19 +278,16 @@ export class GoogleBooksAPI extends APIModel {
 		return year || 'unknown';
 	}
 
-	private extractIdentifier(
-		identifiers?: GoogleBooksIndustryIdentifier[],
-		type: 'ISBN_10' | 'ISBN_13' | 'ISSN' | 'OTHER' = 'ISBN_10'
-	): string | undefined {
+	private extractIdentifier(identifiers?: GoogleBooksIndustryIdentifier[], type: 'ISBN_10' | 'ISBN_13' | 'ISSN' | 'OTHER' = 'ISBN_10'): string | undefined {
 		if (!identifiers) return undefined;
-		
+
 		const found = identifiers.find(id => id.type === type);
 		return found?.identifier;
 	}
 
 	private cleanHtml(html?: string): string {
 		if (!html) return '';
-		
+
 		return html
 			.replace(/<[^>]*>/g, '')
 			.replace(/&nbsp;/g, ' ')
@@ -277,38 +302,38 @@ export class GoogleBooksAPI extends APIModel {
 
 	private formatLanguage(langCode?: string): string {
 		if (!langCode) return '';
-		
+
 		const languageMap: Record<string, string> = {
-			'en': 'English',
-			'it': 'Italian',
-			'es': 'Spanish',
-			'fr': 'French',
-			'de': 'German',
-			'pt': 'Portuguese',
-			'ru': 'Russian',
-			'ja': 'Japanese',
-			'zh': 'Chinese',
-			'ko': 'Korean',
-			'ar': 'Arabic',
-			'nl': 'Dutch',
-			'pl': 'Polish',
-			'sv': 'Swedish',
-			'da': 'Danish',
-			'no': 'Norwegian',
-			'fi': 'Finnish',
-			'tr': 'Turkish',
-			'el': 'Greek',
-			'he': 'Hebrew',
-			'hi': 'Hindi',
-			'th': 'Thai',
-			'vi': 'Vietnamese',
-			'id': 'Indonesian',
-			'cs': 'Czech',
-			'hu': 'Hungarian',
-			'ro': 'Romanian',
-			'uk': 'Ukrainian',
+			en: 'English',
+			it: 'Italian',
+			es: 'Spanish',
+			fr: 'French',
+			de: 'German',
+			pt: 'Portuguese',
+			ru: 'Russian',
+			ja: 'Japanese',
+			zh: 'Chinese',
+			ko: 'Korean',
+			ar: 'Arabic',
+			nl: 'Dutch',
+			pl: 'Polish',
+			sv: 'Swedish',
+			da: 'Danish',
+			no: 'Norwegian',
+			fi: 'Finnish',
+			tr: 'Turkish',
+			el: 'Greek',
+			he: 'Hebrew',
+			hi: 'Hindi',
+			th: 'Thai',
+			vi: 'Vietnamese',
+			id: 'Indonesian',
+			cs: 'Czech',
+			hu: 'Hungarian',
+			ro: 'Romanian',
+			uk: 'Ukrainian',
 		};
-		
+
 		return languageMap[langCode.toLowerCase()] ?? langCode.toUpperCase();
 	}
 

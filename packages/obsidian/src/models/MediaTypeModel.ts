@@ -37,13 +37,13 @@ export abstract class MediaTypeModel {
 	abstract getTags(): string[];
 
 	toMetaDataObject(): Record<string, unknown> {
-	return { 
-		...this.getWithOutUserData(), 
-		...this.userData, 
-		tags: this.getTags().join('/'),
-		cover: this.image // added this for pretty properties
-	};
-}
+		return {
+			...this.getWithOutUserData(),
+			...this.userData,
+			tags: this.getTags().join('/'),
+			cover: this.image, // added this for pretty properties
+		};
+	}
 
 	getWithOutUserData(): Record<string, unknown> {
 		const copy = structuredClone(this) as Record<string, unknown>;
