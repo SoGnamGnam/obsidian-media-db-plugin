@@ -1,0 +1,88 @@
+import { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
+import { MediaType } from 'packages/obsidian/src/utils/MediaType';
+import type { ModelToData } from 'packages/obsidian/src/utils/Utils';
+import { mediaDbTag, migrateObject } from 'packages/obsidian/src/utils/Utils';
+
+export type MovieData = ModelToData<MovieModel>;
+
+export class MovieModel extends MediaTypeModel {
+	japaneseTitle: string;
+	plot: string;
+	genres: string[];
+	director: string[];
+	writer: string[];
+	studio: string[];
+	duration: string;
+	onlineRating: number;
+	actors: string[];
+	image: string;
+	cover: string;
+
+	released: boolean;
+	country: string[];
+	boxOffice: string;
+	ageRating: string;
+	streamingServices: string[];
+	premiere: string;
+
+	budget: number;
+	revenue: number;
+
+	userData: {
+		watched: boolean;
+		lastWatched: string;
+		personalRating: number;
+	};
+
+	constructor(obj: MovieData) {
+		super();
+
+		this.japaneseTitle = '';
+		this.plot = '';
+		this.genres = [];
+		this.director = [];
+		this.writer = [];
+		this.studio = [];
+		this.duration = '';
+		this.onlineRating = 0;
+		this.actors = [];
+		this.image = '';
+		this.cover = '';
+
+		this.released = false;
+		this.country = [];
+		this.boxOffice = '';
+		this.ageRating = '';
+		this.streamingServices = [];
+		this.premiere = '';
+
+		this.budget = 0;
+		this.revenue = 0;
+
+		this.userData = {
+			watched: false,
+			lastWatched: '',
+			personalRating: 0,
+		};
+
+		migrateObject(this, obj, this);
+
+		if (!Object.hasOwn(obj, 'userData')) {
+			migrateObject(this.userData, obj, this.userData);
+		}
+
+		this.type = this.getMediaType();
+	}
+
+	getTags(): string[] {
+		return [mediaDbTag, 'tv', 'movie'];
+	}
+
+	getMediaType(): MediaType {
+		return MediaType.Movie;
+	}
+
+	getSummary(): string {
+		return this.englishTitle + ' (' + this.year + ')';
+	}
+}
