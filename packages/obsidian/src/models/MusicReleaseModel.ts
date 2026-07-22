@@ -10,7 +10,6 @@ export class MusicReleaseModel extends MediaTypeModel {
 	artists: string[];
 	language: string;
 	image: string;
-	cover: string;
 	rating: number;
 	releaseDate: string;
 	albumDuration: string;
@@ -32,7 +31,6 @@ export class MusicReleaseModel extends MediaTypeModel {
 		this.genres = [];
 		this.artists = [];
 		this.image = '';
-		this.cover = '';
 		this.rating = 0;
 		this.releaseDate = '';
 

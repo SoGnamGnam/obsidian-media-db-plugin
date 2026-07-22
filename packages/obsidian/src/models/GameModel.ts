@@ -11,7 +11,6 @@ export class GameModel extends MediaTypeModel {
 	genres: string[];
 	onlineRating: number;
 	image: string;
-	cover: string;
 	platforms: string[];
 	playtime: number;
 
@@ -31,7 +30,6 @@ export class GameModel extends MediaTypeModel {
 		this.genres = [];
 		this.onlineRating = 0;
 		this.image = '';
-		this.cover = '';
 		this.platforms = [];
 		this.playtime = 0;
 

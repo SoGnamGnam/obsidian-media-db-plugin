@@ -11,7 +11,7 @@ import { MediaType } from 'packages/obsidian/src/utils/MediaType';
 import { MEDIA_TYPES } from 'packages/obsidian/src/utils/MediaTypeManager';
 import { unCamelCase } from 'packages/obsidian/src/utils/Utils';
 
-export const LEGACY_API_KEY_SETTINGS: readonly string[] = ['OMDbKey', 'TMDBKey', 'MobyGamesKey', 'GiantBombKey', 'ComicVineKey', 'BoardgameGeekKey'];
+export const LEGACY_API_KEY_SETTINGS: readonly string[] = ['OMDbKey', 'TMDBKey', 'MobyGamesKey', 'GiantBombKey', 'ComicVineKey', 'BoardgameGeekKey', 'RawgKey', 'GoogleBooksKey'];
 
 function createDateFormatDescription(preview: string): DocumentFragment {
 	return createFragment(frag => {
@@ -57,6 +57,7 @@ export interface MediaDbPluginSettings {
 	IGDBClientId: string;
 	IGDBClientSecret: string;
 	RAWGAPIKeyId: string;
+	GoogleBooksKeyId: string;
 	ComicVineKeyId: string;
 	BoardgameGeekKeyId: string;
 
@@ -299,6 +300,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	IGDBClientId: '',
 	IGDBClientSecret: '',
 	RAWGAPIKeyId: '',
+	GoogleBooksKeyId: '',
 	ComicVineKeyId: '',
 	BoardgameGeekKeyId: '',
 
@@ -667,6 +669,22 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 						component.setValue(this.plugin.settings.RAWGAPIKeyId).onChange(data => {
 							this.plugin.settings.RAWGAPIKeyId = data;
+							void this.plugin.saveSettings();
+						});
+
+						return component;
+					}),
+		);
+		apiKeyGroup.addSetting(
+			setting =>
+				void setting
+					.setName('Google Books API key')
+					.setDesc('API key for the Google Books API. Optional, get one free at https://console.cloud.google.com/.')
+					.addComponent(el => {
+						const component = new SecretComponent(this.app, el);
+
+						component.setValue(this.plugin.settings.GoogleBooksKeyId).onChange(data => {
+							this.plugin.settings.GoogleBooksKeyId = data;
 							void this.plugin.saveSettings();
 						});
 

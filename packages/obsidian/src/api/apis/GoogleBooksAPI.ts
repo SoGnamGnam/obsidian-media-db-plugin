@@ -114,10 +114,22 @@ export class GoogleBooksAPI extends APIModel {
 		this.types = [MediaType.Book];
 	}
 
+	/**
+	 * Appends the configured Google Books API key as a `key` query parameter, if one is set.
+	 * The API works without a key, but a key grants a higher request quota.
+	 */
+	private withApiKey(url: string): string {
+		const key = this.plugin.app.secretStorage.getSecret(this.plugin.settings.GoogleBooksKeyId);
+		if (!key) {
+			return url;
+		}
+		return `${url}${url.includes('?') ? '&' : '?'}key=${key}`;
+	}
+
 	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by Title`);
 
-		const searchUrl = `${this.BASE_URL}/volumes?q=${encodeURIComponent(title)}&maxResults=20`;
+		const searchUrl = this.withApiKey(`${this.BASE_URL}/volumes?q=${encodeURIComponent(title)}&maxResults=20`);
 
 		const fetchDataResult = await fromPromise(
 			requestUrl({
@@ -181,7 +193,7 @@ export class GoogleBooksAPI extends APIModel {
 	async getById(id: string): Promise<Result<MediaTypeModel, MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by ID`);
 
-		const detailUrl = `${this.BASE_URL}/volumes/${encodeURIComponent(id)}`;
+		const detailUrl = this.withApiKey(`${this.BASE_URL}/volumes/${encodeURIComponent(id)}`);
 
 		const fetchDataResult = await fromPromise(
 			requestUrl({

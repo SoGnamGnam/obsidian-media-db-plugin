@@ -25,6 +25,15 @@ export class BoardGameGeekAPI extends APIModel {
 		this.types = [MediaType.BoardGame];
 	}
 
+	/**
+	 * Returns the auth headers for the configured BGG API key, or undefined if no key is set.
+	 * The XML API2 works without a key, but authenticated requests get a higher rate limit.
+	 */
+	private getAuthHeaders(): Record<string, string> | undefined {
+		const key = this.plugin.app.secretStorage.getSecret(this.plugin.settings.BoardgameGeekKeyId);
+		return key ? { Authorization: `Bearer ${key}` } : undefined;
+	}
+
 	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by Title`);
 
@@ -32,6 +41,7 @@ export class BoardGameGeekAPI extends APIModel {
 		const fetchDataResult = await fromPromise(
 			requestUrl({
 				url: searchUrl,
+				headers: this.getAuthHeaders(),
 			}),
 			cause =>
 				toMdbError(cause, {
@@ -84,7 +94,7 @@ export class BoardGameGeekAPI extends APIModel {
 				.filter(Boolean)
 				.join(',');
 			const detailsUrl = `${this.apiUrl}/thing?id=${ids}`;
-			const detailsResult = await fromPromise(requestUrl({ url: detailsUrl }), cause => cause);
+			const detailsResult = await fromPromise(requestUrl({ url: detailsUrl, headers: this.getAuthHeaders() }), cause => cause);
 			if (detailsResult.ok && detailsResult.value.status === 200) {
 				const detailsResponse = new window.DOMParser().parseFromString(detailsResult.value.text, 'text/xml');
 				for (const item of Array.from(detailsResponse.querySelectorAll('item'))) {
@@ -108,6 +118,7 @@ export class BoardGameGeekAPI extends APIModel {
 		const fetchDataResult = await fromPromise(
 			requestUrl({
 				url: searchUrl,
+				headers: this.getAuthHeaders(),
 			}),
 			cause =>
 				toMdbError(cause, {
