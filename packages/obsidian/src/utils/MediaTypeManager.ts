@@ -17,11 +17,6 @@ import { replaceTags } from 'packages/obsidian/src/utils/Utils';
 
 // All media types in alphabetical order
 export const MEDIA_TYPES: MediaType[] = [
-	MediaType.Movie,
-	MediaType.Series,
-	MediaType.ComicManga,
-	MediaType.Game,
-	MediaType.MusicRelease,
 	MediaType.BoardGame,
 	MediaType.Book,
 	MediaType.ComicManga,

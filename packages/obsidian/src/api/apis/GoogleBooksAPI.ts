@@ -126,6 +126,31 @@ export class GoogleBooksAPI extends APIModel {
 		return `${url}${url.includes('?') ? '&' : '?'}key=${key}`;
 	}
 
+	/**
+	 * The keyless Google Books endpoint shares one global quota that is regularly exhausted,
+	 * so a 429 is almost always "you need your own API key" rather than a transient hiccup.
+	 */
+	private statusError(status: number, context: Record<string, unknown>): MDBError {
+		const hasKey = !!this.plugin.app.secretStorage.getSecret(this.plugin.settings.GoogleBooksKeyId);
+		if (status === 429) {
+			const userMessage = hasKey
+				? `${this.apiName} rate limit reached (429). Wait a moment or check the quota of your Google Books API key.`
+				: `${this.apiName} rate limit reached (429). The shared keyless quota is exhausted, add a Google Books API key in the plugin settings.`;
+			return {
+				kind: MDBErrorKind.Api,
+				message: `MDB | Received status code 429 from ${this.apiName} (hasKey: ${hasKey}).`,
+				userMessage: userMessage,
+				context: { apiName: this.apiName, status, hasKey, ...context },
+			};
+		}
+		return {
+			kind: MDBErrorKind.Api,
+			message: `MDB | Received status code ${status} from ${this.apiName}.`,
+			userMessage: `Received status code ${status} from ${this.apiName}.`,
+			context: { apiName: this.apiName, status, ...context },
+		};
+	}
+
 	async searchByTitle(title: string): Promise<Result<MediaTypeModel[], MDBError>> {
 		Logger.log(`MDB | api "${this.apiName}" queried by Title`);
 
@@ -134,6 +159,7 @@ export class GoogleBooksAPI extends APIModel {
 		const fetchDataResult = await fromPromise(
 			requestUrl({
 				url: searchUrl,
+				throw: false,
 			}),
 			cause =>
 				toMdbError(cause, {
@@ -148,12 +174,7 @@ export class GoogleBooksAPI extends APIModel {
 		}
 		const response = fetchDataResult.value;
 		if (response.status !== 200) {
-			return err({
-				kind: MDBErrorKind.Api,
-				message: `MDB | Received status code ${response.status} from ${this.apiName}.`,
-				userMessage: `Received status code ${response.status} from ${this.apiName}.`,
-				context: { apiName: this.apiName, status: response.status },
-			});
+			return err(this.statusError(response.status, { title }));
 		}
 
 		const data = response.json as GoogleBooksSearchResponse;
@@ -198,6 +219,7 @@ export class GoogleBooksAPI extends APIModel {
 		const fetchDataResult = await fromPromise(
 			requestUrl({
 				url: detailUrl,
+				throw: false,
 			}),
 			cause =>
 				toMdbError(cause, {
@@ -212,12 +234,7 @@ export class GoogleBooksAPI extends APIModel {
 		}
 		const response = fetchDataResult.value;
 		if (response.status !== 200) {
-			return err({
-				kind: MDBErrorKind.Api,
-				message: `MDB | Received status code ${response.status} from ${this.apiName}.`,
-				userMessage: `Received status code ${response.status} from ${this.apiName}.`,
-				context: { apiName: this.apiName, status: response.status, id },
-			});
+			return err(this.statusError(response.status, { id }));
 		}
 
 		const data = response.json as GoogleBooksVolume;

@@ -1,5 +1,6 @@
 import createClient from 'openapi-fetch';
 import { APIModel } from 'packages/obsidian/src/api/APIModel';
+import { tmdbImageUrl } from 'packages/obsidian/src/api/apis/TMDBUtils';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
 import { MovieModel } from 'packages/obsidian/src/models/MovieModel';
@@ -146,6 +147,7 @@ export class TMDBMovieAPI extends APIModel {
 					year: result.release_date ? new Date(result.release_date).getFullYear().toString() : 'unknown',
 					dataSource: this.apiName,
 					id: result.id.toString(),
+					image: tmdbImageUrl(result.poster_path),
 				}),
 			);
 		}
@@ -245,7 +247,7 @@ export class TMDBMovieAPI extends APIModel {
 				duration: result.runtime?.toString() ?? 'unknown',
 				onlineRating: result.vote_average,
 				actors: getTopCastNames(credits, 5),
-				image: `https://image.tmdb.org/t/p/w780${result.poster_path}`,
+				image: tmdbImageUrl(result.poster_path),
 
 				released: ['Released'].includes(result.status!),
 				streamingServices: [],
