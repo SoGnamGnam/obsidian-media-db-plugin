@@ -1,0 +1,76 @@
+import { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
+import { MediaType } from 'packages/obsidian/src/utils/MediaType';
+import type { ModelToData } from 'packages/obsidian/src/utils/Utils';
+import { mediaDbTag, migrateObject } from 'packages/obsidian/src/utils/Utils';
+
+export type BookData = ModelToData<BookModel>;
+
+export class BookModel extends MediaTypeModel {
+	author: string;
+	plot: string;
+	genres: string[];
+	pages: number;
+	image: string;
+	cover: string;
+	onlineRating: number;
+	isbn: string;
+	isbn13: string;
+
+	genres: string[];
+	publisher: string;
+	language: string;
+
+	released: boolean;
+
+	userData: {
+		read: boolean;
+		lastRead: string;
+		personalRating: number;
+	};
+
+	constructor(obj: BookData) {
+		super();
+
+		this.author = '';
+		this.plot = '';
+		this.genres = [];
+		this.pages = 0;
+		this.image = '';
+		this.cover = '';
+		this.onlineRating = 0;
+		this.isbn = '';
+		this.isbn13 = '';
+
+		this.genres = [];
+		this.publisher = '';
+		this.language = '';
+
+		this.released = false;
+
+		this.userData = {
+			read: false,
+			lastRead: '',
+			personalRating: 0,
+		};
+
+		migrateObject(this, obj, this);
+
+		if (!Object.hasOwn(obj, 'userData')) {
+			migrateObject(this.userData, obj, this.userData);
+		}
+
+		this.type = this.getMediaType();
+	}
+
+	getTags(): string[] {
+		return [mediaDbTag, 'book'];
+	}
+
+	getMediaType(): MediaType {
+		return MediaType.Book;
+	}
+
+	getSummary(): string {
+		return this.englishTitle + ' (' + this.year + ') - ' + this.author;
+	}
+}
