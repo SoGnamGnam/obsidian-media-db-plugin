@@ -387,3 +387,13 @@ small.media-db-plugin-list-text {
 .media-db-plugin-hidden {
 	display: none;
 }
+
+.media-db-plugin-select-element-in-vault {
+	color: var(--text-success);
+	font-weight: var(--font-semibold);
+}
+
+.media-db-plugin-confirm-overwrite-hint {
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+}

@@ -1,6 +1,17 @@
 import createClient from 'openapi-fetch';
 import { APIModel } from 'packages/obsidian/src/api/APIModel';
-import { tmdbImageUrl } from 'packages/obsidian/src/api/apis/TMDBUtils';
+import type { TMDBCreditsResponse, TMDBReleaseDatesResponse, TMDBWatchProvidersResponse } from 'packages/obsidian/src/api/apis/TMDBUtils';
+import {
+	DETAIL_CAST_LIMIT,
+	formatBoxOffice,
+	getCastNames,
+	getCrewNamesByJobs,
+	getMovieCertification,
+	getPreferredRegion,
+	getStreamingServices,
+	tmdbImageUrl,
+	WRITING_JOBS,
+} from 'packages/obsidian/src/api/apis/TMDBUtils';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
 import { MovieModel } from 'packages/obsidian/src/models/MovieModel';
@@ -13,34 +24,8 @@ import { err, fromPromise, ok } from 'packages/obsidian/src/utils/result';
 import { obsidianFetch } from 'packages/obsidian/src/utils/Utils';
 import type { paths } from 'packages/schemas/src/TMDB';
 
-interface TMDBCreditMember {
-	name?: string | null;
-	job?: string | null;
-}
-
-interface TMDBCreditsResponse {
-	credits?: {
-		cast?: TMDBCreditMember[];
-		crew?: TMDBCreditMember[];
-	};
-}
-
 function isNonEmptyString(value: unknown): value is string {
 	return typeof value === 'string' && value.length > 0;
-}
-
-function getTopCastNames(credits: TMDBCreditsResponse['credits'], size: number): string[] {
-	return (credits?.cast ?? [])
-		.map(c => c.name)
-		.filter(isNonEmptyString)
-		.slice(0, size);
-}
-
-function getCrewNamesByJob(credits: TMDBCreditsResponse['credits'], job: string): string[] {
-	return (credits?.crew ?? [])
-		.filter(c => c.job === job)
-		.map(c => c.name)
-		.filter(isNonEmptyString);
 }
 
 export class TMDBMovieAPI extends APIModel {
@@ -177,7 +162,7 @@ export class TMDBMovieAPI extends APIModel {
 				params: {
 					path: { movie_id: parseInt(id) },
 					query: {
-						append_to_response: 'credits',
+						append_to_response: 'credits,release_dates,watch/providers',
 					},
 				},
 				fetch: obsidianFetch,
@@ -226,6 +211,7 @@ export class TMDBMovieAPI extends APIModel {
 		}
 		// console.debug(result);
 		const credits = (result as TMDBCreditsResponse).credits;
+		const region = getPreferredRegion();
 
 		return ok(
 			new MovieModel({
@@ -240,17 +226,22 @@ export class TMDBMovieAPI extends APIModel {
 
 				plot: result.overview ?? '',
 				genres: result.genres?.map(g => g.name).filter(isNonEmptyString) ?? [],
-				writer: getCrewNamesByJob(credits, 'Screenplay'),
-				director: getCrewNamesByJob(credits, 'Director'),
+				writer: getCrewNamesByJobs(credits, WRITING_JOBS),
+				director: getCrewNamesByJobs(credits, ['Director']),
 				studio: result.production_companies?.map(s => s.name).filter(isNonEmptyString) ?? [],
 
 				duration: result.runtime?.toString() ?? 'unknown',
 				onlineRating: result.vote_average,
-				actors: getTopCastNames(credits, 5),
+				actors: getCastNames(credits, DETAIL_CAST_LIMIT),
 				image: tmdbImageUrl(result.poster_path),
 
 				released: ['Released'].includes(result.status!),
-				streamingServices: [],
+				country: result.production_countries?.map(c => c.name).filter(isNonEmptyString) ?? [],
+				ageRating: getMovieCertification(result as TMDBReleaseDatesResponse, region),
+				streamingServices: getStreamingServices(result as TMDBWatchProvidersResponse, region),
+				budget: result.budget,
+				revenue: result.revenue,
+				boxOffice: formatBoxOffice(result.revenue),
 
 				userData: {
 					watched: false,

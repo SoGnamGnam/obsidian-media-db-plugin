@@ -21,6 +21,9 @@ interface RAWGGame {
 	developers?: { name: string }[];
 	publishers?: { name: string }[];
 	genres?: { name: string }[];
+	platforms?: { platform?: { name?: string } }[];
+	/** Average time to beat, in hours. */
+	playtime?: number;
 }
 
 interface RAWGSearchResponse {
@@ -148,6 +151,8 @@ export class RAWGAPI extends APIModel {
 				genres: result.genres?.map(g => g.name) ?? [],
 				onlineRating: result.metacritic,
 				image: result.background_image,
+				platforms: result.platforms?.map(p => p.platform?.name).filter((name): name is string => typeof name === 'string' && name.length > 0) ?? [],
+				playtime: result.playtime ?? 0,
 				released: result.released != null,
 				releaseDate: result.released,
 				userData: { played: false, personalRating: 0 },

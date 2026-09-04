@@ -31,6 +31,7 @@ import { MediaTypeManager } from 'packages/obsidian/src/utils/MediaTypeManager';
 import { MEDIA_TYPES } from 'packages/obsidian/src/utils/MediaTypeManager';
 import { ModalHelper } from 'packages/obsidian/src/utils/ModalHelper';
 import { unCamelCase } from 'packages/obsidian/src/utils/Utils';
+import { VaultMediaIndex } from 'packages/obsidian/src/utils/VaultMediaIndex';
 
 export default class MediaDbPlugin extends Plugin {
 	declare settings: MediaDbPluginSettings;
@@ -43,6 +44,7 @@ export default class MediaDbPlugin extends Plugin {
 	bulkImportHelper!: BulkImportHelper;
 	dateFormatter!: DateFormatter;
 	errorReporter!: ErrorReporter;
+	vaultMediaIndex!: VaultMediaIndex;
 
 	async onload(): Promise<void> {
 		this.mediaTypeManager = new MediaTypeManager();
@@ -53,12 +55,14 @@ export default class MediaDbPlugin extends Plugin {
 		this.entryHelper = new MediaDbEntryHelper(this);
 		this.bulkImportHelper = new BulkImportHelper(this);
 		this.dateFormatter = new DateFormatter();
+		this.vaultMediaIndex = new VaultMediaIndex(this);
 
 		await this.loadSettings();
 		this.registerDefaultApis();
 		this.addSettingTab(new MediaDbSettingTab(this.app, this));
 		this.registerRibbonAndFileMenu();
 		this.registerCommands();
+		this.vaultMediaIndex.registerVaultEvents();
 	}
 
 	onunload(): void {}
@@ -148,6 +152,20 @@ export default class MediaDbPlugin extends Plugin {
 				}
 				if (!checking) {
 					void this.fileHelper.updateActiveNote(true);
+				}
+				return true;
+			},
+		});
+
+		this.addCommand({
+			id: 'update-media-db-note-merge',
+			name: 'Update metadata (keep manual edits)',
+			checkCallback: (checking: boolean) => {
+				if (!this.app.workspace.getActiveFile()) {
+					return false;
+				}
+				if (!checking) {
+					void this.fileHelper.updateActiveNoteMerging();
 				}
 				return true;
 			},

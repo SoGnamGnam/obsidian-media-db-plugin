@@ -1,6 +1,7 @@
 import createClient from 'openapi-fetch';
 import { APIModel } from 'packages/obsidian/src/api/APIModel';
-import { tmdbImageUrl } from 'packages/obsidian/src/api/apis/TMDBUtils';
+import type { TMDBContentRatingsResponse, TMDBCreditsResponse, TMDBWatchProvidersResponse } from 'packages/obsidian/src/api/apis/TMDBUtils';
+import { DETAIL_CAST_LIMIT, getCastNames, getPreferredRegion, getSeriesCertification, getStreamingServices, tmdbImageUrl } from 'packages/obsidian/src/api/apis/TMDBUtils';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
 import { SeriesModel } from 'packages/obsidian/src/models/SeriesModel';
@@ -13,25 +14,8 @@ import { err, fromPromise, ok } from 'packages/obsidian/src/utils/result';
 import { obsidianFetch } from 'packages/obsidian/src/utils/Utils';
 import type { paths } from 'packages/schemas/src/TMDB';
 
-interface TMDBCreditMember {
-	name?: string | null;
-}
-
-interface TMDBCreditsResponse {
-	credits?: {
-		cast?: TMDBCreditMember[];
-	};
-}
-
 function isNonEmptyString(value: unknown): value is string {
 	return typeof value === 'string' && value.length > 0;
-}
-
-function getTopCastNames(credits: TMDBCreditsResponse['credits'], size: number): string[] {
-	return (credits?.cast ?? [])
-		.map(c => c.name)
-		.filter(isNonEmptyString)
-		.slice(0, size);
 }
 
 export class TMDBSeriesAPI extends APIModel {
@@ -167,7 +151,7 @@ export class TMDBSeriesAPI extends APIModel {
 				params: {
 					path: { series_id: parseInt(id) },
 					query: {
-						append_to_response: 'credits',
+						append_to_response: 'credits,content_ratings,watch/providers',
 					},
 				},
 				fetch: obsidianFetch,
@@ -215,6 +199,7 @@ export class TMDBSeriesAPI extends APIModel {
 		}
 		// console.debug(result);
 		const credits = (result as TMDBCreditsResponse).credits;
+		const region = getPreferredRegion();
 
 		return ok(
 			new SeriesModel({
@@ -233,11 +218,17 @@ export class TMDBSeriesAPI extends APIModel {
 				episodes: result.number_of_episodes,
 				duration: result.episode_run_time?.[0]?.toString() ?? 'unknown',
 				onlineRating: result.vote_average,
-				actors: getTopCastNames(credits, 5),
+				actors: getCastNames(credits, DETAIL_CAST_LIMIT),
 				image: tmdbImageUrl(result.poster_path),
 
 				released: ['Returning Series', 'Cancelled', 'Ended'].includes(result.status!),
-				streamingServices: [],
+				country: result.production_countries?.map(c => c.name).filter(isNonEmptyString) ?? [],
+				ageRating: getSeriesCertification(result as TMDBContentRatingsResponse, region),
+				streamingServices: getStreamingServices(result as TMDBWatchProvidersResponse, region),
+				createdBy: result.created_by?.map(c => c.name).filter(isNonEmptyString) ?? [],
+				networks: result.networks?.map(n => n.name).filter(isNonEmptyString) ?? [],
+				numberOfSeasons: result.number_of_seasons,
+				status: result.status ?? '',
 				airing: ['Returning Series'].includes(result.status!),
 				airedFrom: this.plugin.dateFormatter.format(result.first_air_date, this.apiDateFormat) ?? 'unknown',
 				airedTo: ['Returning Series'].includes(result.status!) ? 'unknown' : (this.plugin.dateFormatter.format(result.last_air_date, this.apiDateFormat) ?? 'unknown'),

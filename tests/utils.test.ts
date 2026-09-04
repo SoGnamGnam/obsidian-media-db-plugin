@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { MovieModel } from 'packages/obsidian/src/models/MovieModel';
-import { markdownTable, migrateObject, replaceTags, wrapAround } from 'packages/obsidian/src/utils/Utils';
+import { formatRelativeTime, markdownTable, migrateObject, replaceTags, wrapAround } from 'packages/obsidian/src/utils/Utils';
 
 test('replaceTags substitutes nested values and array operators', () => {
 	const movie = new MovieModel({
@@ -53,4 +53,17 @@ test('wrapAround uses positive modulo and rejects invalid sizes', () => {
 	expect(wrapAround(5, 3)).toBe(2);
 	expect(wrapAround(-1, 3)).toBe(2);
 	expect(() => wrapAround(1, 0)).toThrow('size may not be zero or negative');
+});
+
+test('formatRelativeTime buckets elapsed time and rejects unusable input', () => {
+	const now = new Date('2026-09-04T12:00:00.000Z');
+
+	expect(formatRelativeTime('2026-09-04T11:59:30.000Z', now)).toBe('just now');
+	expect(formatRelativeTime('2026-09-04T11:00:00.000Z', now)).toBe('1 hour ago');
+	expect(formatRelativeTime('2026-09-01T12:00:00.000Z', now)).toBe('3 days ago');
+	expect(formatRelativeTime('2026-06-04T12:00:00.000Z', now)).toBe('3 months ago');
+	expect(formatRelativeTime('2024-09-04T12:00:00.000Z', now)).toBe('2 years ago');
+
+	expect(formatRelativeTime(undefined, now)).toBeUndefined();
+	expect(formatRelativeTime('not a date', now)).toBeUndefined();
 });

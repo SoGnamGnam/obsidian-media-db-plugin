@@ -1,9 +1,11 @@
-import type { TFile } from 'obsidian';
-import { TFolder } from 'obsidian';
+import { TFile, TFolder } from 'obsidian';
 import { Notice, normalizePath, parseYaml, requestUrl, stringifyYaml } from 'obsidian';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
+import type { OverwriteAction } from 'packages/obsidian/src/modals/ConfirmOverwriteModal';
 import { ConfirmOverwriteModal } from 'packages/obsidian/src/modals/ConfirmOverwriteModal';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
+import type { MergeSummary } from 'packages/obsidian/src/utils/frontmatterMerge';
+import { getOwnedProperties, mergeFrontmatter } from 'packages/obsidian/src/utils/frontmatterMerge';
 import { Logger } from 'packages/obsidian/src/utils/Logger';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
 import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
@@ -50,6 +52,53 @@ export class MediaDbFileHelper {
 
 		options.openNote = this.plugin.settings.openNoteInNewTab;
 
+		const folderResult = await this.attempt(() => this.plugin.mediaTypeManager.getFolder(mediaTypeModel, this.plugin.app), {
+			kind: MDBErrorKind.Vault,
+			message: 'Failed to determine note folder',
+			userMessage: 'Failed to determine note folder',
+		});
+		if (!folderResult.ok) {
+			return folderResult;
+		}
+
+		options.folder ??= folderResult.value;
+
+		// resolved before the note is built, so an existing note can be refreshed in place
+		// instead of being regenerated and replaced
+		const fileName = replaceIllegalFileNameCharactersInString(this.plugin.mediaTypeManager.getFileName(mediaTypeModel));
+		const existingFile = this.getNoteAtPath(options.folder, fileName);
+
+		if (existingFile && !options.overwriteConfirmed) {
+			const action = await new Promise<OverwriteAction>(resolve => {
+				new ConfirmOverwriteModal(this.plugin.app, fileName, resolve, { allowUpdate: true }).open();
+			});
+
+			if (action === 'cancel') {
+				return err({ kind: MDBErrorKind.Cancelled, message: 'MDB | file creation cancelled by user', userMessage: 'MDB | file creation cancelled by user' });
+			}
+
+			if (action === 'update') {
+				const mergeResult = await this.updateNoteMerging(existingFile, mediaTypeModel);
+				if (!mergeResult.ok) {
+					return mergeResult;
+				}
+
+				this.notifyMergeSummary(mergeResult.value);
+
+				// mirrors what happens after an overwrite, so both answers leave the user on the note
+				if (options.openNote) {
+					await this.openNote(existingFile);
+				}
+
+				return ok(undefined);
+			}
+
+			options.overwriteConfirmed = true;
+		}
+
+		// stamp the write time, so notes can be checked for staleness without querying the api again
+		mediaTypeModel.lastUpdate = new Date().toISOString();
+
 		if (this.plugin.settings.imageDownload) {
 			const imageResult = await this.downloadImageForMediaModel(mediaTypeModel);
 			if (!imageResult.ok) {
@@ -66,18 +115,7 @@ export class MediaDbFileHelper {
 			return fileContentResult;
 		}
 
-		const folderResult = await this.attempt(() => this.plugin.mediaTypeManager.getFolder(mediaTypeModel, this.plugin.app), {
-			kind: MDBErrorKind.Vault,
-			message: 'Failed to determine note folder',
-			userMessage: 'Failed to determine note folder',
-		});
-		if (!folderResult.ok) {
-			return folderResult;
-		}
-
-		options.folder ??= folderResult.value;
-
-		const targetFileResult = await this.createNote(this.plugin.mediaTypeManager.getFileName(mediaTypeModel), fileContentResult.value, options);
+		const targetFileResult = await this.createNote(fileName, fileContentResult.value, options);
 		if (!targetFileResult.ok) {
 			return targetFileResult;
 		}
@@ -144,8 +182,96 @@ export class MediaDbFileHelper {
 		}
 	}
 
+	/**
+	 * Refreshes an existing note in place: api owned frontmatter fields are overwritten, everything
+	 * the user put in the note - both extra keys and `userData` fields - is kept, and the note body
+	 * is left alone. Unlike {@link createMediaDbNoteFromModel} the file is never recreated.
+	 */
+	async updateNoteMerging(file: TFile, mediaTypeModel: MediaTypeModel): Promise<Result<MergeSummary, MDBError>> {
+		if (this.plugin.settings.imageDownload) {
+			const imageResult = await this.downloadImageForMediaModel(mediaTypeModel);
+			if (!imageResult.ok) {
+				return imageResult;
+			}
+		}
+
+		mediaTypeModel.lastUpdate = new Date().toISOString();
+
+		const incoming = this.plugin.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
+		const propertyMappings = this.plugin.settings.propertyMappingModels.find(model => model.type === mediaTypeModel.getMediaType())?.properties ?? [];
+		const ownedProperties = getOwnedProperties(propertyMappings);
+		const userDataKeys = Object.keys(mediaTypeModel.userData);
+
+		let summary: MergeSummary = { updated: [], added: [], removed: [], preserved: [] };
+
+		return await this.attempt(
+			async () => {
+				await this.plugin.app.fileManager.processFrontMatter(file, (frontmatter: Metadata) => {
+					const result = mergeFrontmatter(frontmatter, incoming, ownedProperties, userDataKeys);
+					summary = { updated: result.updated, added: result.added, removed: result.removed, preserved: result.preserved };
+
+					for (const key of Object.keys(frontmatter)) {
+						delete frontmatter[key];
+					}
+					Object.assign(frontmatter, result.merged);
+				});
+
+				Logger.debug(`MDB | merged metadata into ${file.path}`, summary);
+
+				return summary;
+			},
+			{
+				kind: MDBErrorKind.Vault,
+				message: `MDB | failed to update the frontmatter of ${file.path}`,
+				userMessage: 'Failed to update the note.',
+			},
+		);
+	}
+
+	/**
+	 * Resolves the active note back to its api entry and refreshes it through {@link updateNoteMerging}.
+	 */
+	async updateActiveNoteMerging(): Promise<void> {
+		const activeFile = this.plugin.app.workspace.getActiveFile() ?? undefined;
+		if (!activeFile) {
+			throw new Error('MDB | there is no active note');
+		}
+
+		// only the identity properties are read back here, and those are locked against remapping,
+		// so this works regardless of the property mapping the note was written with
+		const metadata = this.plugin.modelPropertyMapper.convertObjectBack(this.getMetadataFromFileCache(activeFile));
+		if (!metadata?.type || !metadata?.dataSource || !metadata?.id) {
+			throw new Error('MDB | active note is not a Media DB entry or is missing metadata');
+		}
+
+		const identity = metadata as unknown as MediaTypeModelObj;
+		const modelResult = await this.plugin.apiManager.queryDetailedInfoById(String(identity.id), identity.dataSource);
+		if (!modelResult.ok) {
+			this.plugin.errorReporter.report(modelResult.error);
+			return;
+		}
+
+		if (!modelResult.value) {
+			return;
+		}
+
+		const updateResult = await this.updateNoteMerging(activeFile, modelResult.value);
+		if (!updateResult.ok) {
+			this.plugin.errorReporter.report(updateResult.error);
+			return;
+		}
+
+		const { updated, added, removed, preserved } = updateResult.value;
+		const removedNotice = removed.length > 0 ? `, ${removed.length} migrated` : '';
+		new Notice(`${updated.length + added.length} fields updated, ${preserved.length} kept${removedNotice}.`);
+	}
+
 	generateMediaDbNoteFrontmatterPreview(mediaTypeModel: MediaTypeModel): string {
-		const fileMetadata = this.plugin.modelPropertyMapper.convertObject(mediaTypeModel.toMetaDataObject());
+		const metadata = mediaTypeModel.toMetaDataObject();
+		// the real stamp is applied on write, this only keeps the preview from showing an empty field
+		const lastUpdate = typeof metadata.lastUpdate === 'string' && metadata.lastUpdate ? metadata.lastUpdate : new Date().toISOString();
+
+		const fileMetadata = this.plugin.modelPropertyMapper.convertObject({ ...metadata, lastUpdate });
 		return stringifyYaml(fileMetadata);
 	}
 
@@ -160,6 +286,7 @@ export class MediaDbFileHelper {
 				id: mediaTypeModel.id,
 				type: mediaTypeModel.type,
 				dataSource: mediaTypeModel.dataSource,
+				lastUpdate: mediaTypeModel.lastUpdate,
 			};
 		}
 
@@ -245,6 +372,27 @@ export class MediaDbFileHelper {
 		return structuredClone(metadata ?? {});
 	}
 
+	private async openNote(file: TFile): Promise<void> {
+		const activeLeaf = this.plugin.app.workspace.getLeaf(false);
+		if (!activeLeaf) {
+			Logger.warn('MDB | no active leaf, not opening the note');
+			return;
+		}
+
+		await activeLeaf.openFile(file, { state: { mode: 'source' } });
+	}
+
+	/** Returns the note a model would be written to, if one is already there. */
+	private getNoteAtPath(folder: TFolder, fileName: string): TFile | undefined {
+		const file = this.plugin.app.vault.getAbstractFileByPath(`${folder.path}/${fileName}.md`);
+		return file instanceof TFile ? file : undefined;
+	}
+
+	private notifyMergeSummary(summary: MergeSummary): void {
+		const migrated = summary.removed.length > 0 ? `, ${summary.removed.length} migrated` : '';
+		new Notice(`${summary.updated.length + summary.added.length} fields updated, ${summary.preserved.length} kept${migrated}.`);
+	}
+
 	async createNote(fileName: string, fileContent: string, options: CreateNoteOptions): Promise<Result<TFile, MDBError>> {
 		const folder = options.folder ?? this.plugin.app.vault.getAbstractFileByPath('/');
 
@@ -257,11 +405,15 @@ export class MediaDbFileHelper {
 
 		const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
 		if (file) {
-			const shouldOverwrite = await new Promise<boolean>(resolve => {
-				new ConfirmOverwriteModal(this.plugin.app, fileName, resolve).open();
-			});
+			// createMediaDbNoteFromModel already asks, and can offer an in place update on top of
+			// overwriting, so it flags the answer instead of letting this prompt run a second time
+			const action = options.overwriteConfirmed
+				? 'overwrite'
+				: await new Promise<OverwriteAction>(resolve => {
+						new ConfirmOverwriteModal(this.plugin.app, fileName, resolve).open();
+					});
 
-			if (!shouldOverwrite) {
+			if (action !== 'overwrite') {
 				return err({ kind: MDBErrorKind.Cancelled, message: 'MDB | file creation cancelled by user', userMessage: 'MDB | file creation cancelled by user' });
 			}
 
@@ -272,12 +424,7 @@ export class MediaDbFileHelper {
 		Logger.debug(`MDB | created new file at ${filePath}`);
 
 		if (options.openNote) {
-			const activeLeaf = this.plugin.app.workspace.getLeaf(false);
-			if (!activeLeaf) {
-				Logger.warn('MDB | no active leaf, not opening newly created note');
-				return ok(targetFile);
-			}
-			await activeLeaf.openFile(targetFile, { state: { mode: 'source' } });
+			await this.openNote(targetFile);
 		}
 
 		return ok(targetFile);

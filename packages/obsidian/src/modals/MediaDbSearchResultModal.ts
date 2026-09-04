@@ -3,6 +3,7 @@ import { SelectModal } from 'packages/obsidian/src/modals/SelectModal';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
 import type { SelectModalData, SelectModalOptions } from 'packages/obsidian/src/utils/ModalHelper';
 import { SELECTMODALOPTIONSDEFAULT } from 'packages/obsidian/src/utils/ModalHelper';
+import { formatRelativeTime } from 'packages/obsidian/src/utils/Utils';
 
 export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 	plugin: MediaDbPlugin;
@@ -78,6 +79,20 @@ export class MediaDbSearchResultModal extends SelectModal<MediaTypeModel> {
 		textContainer.createEl('div', { text: this.plugin.mediaTypeManager.getFileName(item) });
 		textContainer.createEl('small', { text: `${item.getSummary()}\n` });
 		textContainer.createEl('small', { text: `${item.type.toUpperCase() + (item.subType ? ` (${item.subType})` : '')} from ${item.dataSource}` });
+
+		const vaultEntry = this.plugin.vaultMediaIndex.find(item);
+		if (vaultEntry) {
+			const age = formatRelativeTime(vaultEntry.lastUpdate);
+			textContainer.createEl('small', {
+				cls: 'media-db-plugin-select-element-in-vault',
+				text: age ? `✓ Already in vault · updated ${age}` : '✓ Already in vault',
+			});
+		}
+	}
+
+	onOpen(): void {
+		this.plugin.vaultMediaIndex.build();
+		super.onOpen();
 	}
 
 	// Perform action on the selected suggestion.

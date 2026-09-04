@@ -196,6 +196,8 @@ export interface CreateNoteOptions {
 	attachFile?: TFile;
 	openNote?: boolean;
 	folder?: TFolder;
+	/** Set once the user has agreed to replace an existing note, so the confirmation is not asked twice. */
+	overwriteConfirmed?: boolean;
 }
 
 export function migrateObject<T extends object>(object: T, oldData: Record<string, unknown>, defaultData: T): void {
@@ -312,4 +314,41 @@ export function getLanguageName(code: string): string | null {
 	const language = iso6392.find(lang => lang.iso6392B === code || lang.iso6392T === code);
 
 	return language?.name ?? null;
+}
+
+/**
+ * Formats an ISO 8601 timestamp as a coarse relative age, e.g. `3 months ago`.
+ * Returns undefined if the value is missing or unparsable, so callers can omit the label entirely.
+ */
+export function formatRelativeTime(isoTimestamp: string | undefined, now: Date = new Date()): string | undefined {
+	if (!isoTimestamp) {
+		return undefined;
+	}
+
+	const timestamp = Date.parse(isoTimestamp);
+	if (Number.isNaN(timestamp)) {
+		return undefined;
+	}
+
+	const elapsedSeconds = Math.round((now.getTime() - timestamp) / 1000);
+	if (elapsedSeconds < 60) {
+		return 'just now';
+	}
+
+	const units: [limit: number, seconds: number, name: string][] = [
+		[60, 60, 'minute'],
+		[24, 60 * 60, 'hour'],
+		[30, 60 * 60 * 24, 'day'],
+		[12, 60 * 60 * 24 * 30, 'month'],
+		[Number.POSITIVE_INFINITY, 60 * 60 * 24 * 365, 'year'],
+	];
+
+	for (const [limit, seconds, name] of units) {
+		const value = Math.floor(elapsedSeconds / seconds);
+		if (value < limit) {
+			return `${value} ${name}${value === 1 ? '' : 's'} ago`;
+		}
+	}
+
+	return undefined;
 }

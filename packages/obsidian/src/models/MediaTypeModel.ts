@@ -10,6 +10,8 @@ export abstract class MediaTypeModel {
 	url: string;
 	id: string;
 	image?: string;
+	/** ISO 8601 timestamp of the last time this entry was written to a note by the plugin. */
+	lastUpdate: string;
 
 	userData: object;
 
@@ -23,6 +25,7 @@ export abstract class MediaTypeModel {
 		this.url = '';
 		this.id = '';
 		this.image = '';
+		this.lastUpdate = '';
 
 		this.userData = {};
 	}
