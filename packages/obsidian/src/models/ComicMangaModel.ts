@@ -14,7 +14,6 @@ export class ComicMangaModel extends MediaTypeModel {
 	volumes: number;
 	onlineRating: number;
 	image: string;
-	cover: string;
 
 	released: boolean;
 	status: string;
@@ -39,7 +38,6 @@ export class ComicMangaModel extends MediaTypeModel {
 		this.volumes = 0;
 		this.onlineRating = 0;
 		this.image = '';
-		this.cover = '';
 
 		this.released = false;
 		this.status = '';

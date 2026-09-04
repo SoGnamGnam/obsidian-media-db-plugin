@@ -11,12 +11,10 @@ export class BookModel extends MediaTypeModel {
 	genres: string[];
 	pages: number;
 	image: string;
-	cover: string;
 	onlineRating: number;
 	isbn: string;
 	isbn13: string;
 
-	genres: string[];
 	publisher: string;
 	language: string;
 
@@ -36,12 +34,10 @@ export class BookModel extends MediaTypeModel {
 		this.genres = [];
 		this.pages = 0;
 		this.image = '';
-		this.cover = '';
 		this.onlineRating = 0;
 		this.isbn = '';
 		this.isbn13 = '';
 
-		this.genres = [];
 		this.publisher = '';
 		this.language = '';
 

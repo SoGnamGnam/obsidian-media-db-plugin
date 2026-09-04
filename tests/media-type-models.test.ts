@@ -8,7 +8,6 @@ import { MusicReleaseModel } from 'packages/obsidian/src/models/MusicReleaseMode
 import { SeasonModel } from 'packages/obsidian/src/models/SeasonModel';
 import { SeasonSearchResultModel } from 'packages/obsidian/src/models/SeasonSearchResultModel';
 import { SeriesModel } from 'packages/obsidian/src/models/SeriesModel';
-import { WikiModel } from 'packages/obsidian/src/models/WikiModel';
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
 import { MediaTypeManager } from 'packages/obsidian/src/utils/MediaTypeManager';
 
@@ -24,7 +23,6 @@ test('MediaTypeManager creates the expected model for every supported media type
 		[MediaType.MusicRelease, MusicReleaseModel],
 		[MediaType.Season, SeasonModel],
 		[MediaType.Series, SeriesModel],
-		[MediaType.Wiki, WikiModel],
 	] as const;
 
 	for (const [mediaType, Model] of cases) {
@@ -65,12 +63,10 @@ test('legacy flat user data is migrated into model userData defaults', () => {
 
 test('models with custom tag and metadata behavior preserve their special cases', () => {
 	const manga = new ComicMangaModel({ title: 'Berserk', subType: 'manga' });
-	const wiki = new WikiModel({ title: 'Obsidian', article: 'Long article text' });
 	const music = new MusicReleaseModel({ title: 'Kind of Blue', year: '1959', artists: ['Miles Davis'], subType: 'album' });
 	const seasonSearchResult = new SeasonSearchResultModel({ seasonCount: 1 });
 
 	expect(manga.getTags()).toEqual(['mediaDB', 'manga']);
-	expect(wiki.getWithOutUserData()).not.toHaveProperty('article');
 	expect(music.getSummary()).toBe('Kind of Blue (1959) - Miles Davis');
 	expect(seasonSearchResult.getSummary()).toBe('1 season');
 });

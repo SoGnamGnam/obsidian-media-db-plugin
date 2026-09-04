@@ -1,5 +1,6 @@
 import createClient from 'openapi-fetch';
 import { APIModel } from 'packages/obsidian/src/api/APIModel';
+import { tmdbImageUrl } from 'packages/obsidian/src/api/apis/TMDBUtils';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
 import { SeasonModel } from 'packages/obsidian/src/models/SeasonModel';
@@ -160,6 +161,7 @@ export class TMDBSeasonAPI extends APIModel {
 					year: result.first_air_date ? new Date(result.first_air_date).getFullYear().toString() : 'unknown',
 					dataSource: this.apiName,
 					id: result.id?.toString() ?? '',
+					image: tmdbImageUrl(result.poster_path),
 					seasonCount: totalSeasons,
 				});
 			}),
@@ -242,6 +244,7 @@ export class TMDBSeasonAPI extends APIModel {
 						id: `${tvId}/season/${seasonNumber}`,
 						seasonTitle: season.name ?? titleText,
 						seasonNumber: seasonNumber,
+						image: tmdbImageUrl(season.poster_path),
 					}),
 				);
 			}
@@ -417,7 +420,7 @@ export class TMDBSeasonAPI extends APIModel {
 				airedFrom: this.plugin.dateFormatter.format(airDate, this.apiDateFormat) ?? 'unknown',
 				airedTo: formattedAiredTo,
 				plot: seasonData.overview ?? '',
-				image: seasonData.poster_path ? `https://image.tmdb.org/t/p/w780${seasonData.poster_path}` : '',
+				image: tmdbImageUrl(seasonData.poster_path),
 				genres: extractNames(seriesData.genres),
 				writer: extractNames(seriesData.created_by),
 				studio: extractNames(seriesData.production_companies),

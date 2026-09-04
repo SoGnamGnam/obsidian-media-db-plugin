@@ -2,8 +2,8 @@
 	"extends": "../tsconfig.json",
 	"compilerOptions": {
 		"paths": {
-			"packages/*": ["../packages/*"],
-			"tests/*": ["./*"]
+			"packages/*": ["packages/*"],
+			"tests/*": ["tests/*"]
 		},
 		"types": ["vite/client", "bun-types"]
 	},

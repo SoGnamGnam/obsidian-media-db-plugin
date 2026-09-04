@@ -11,7 +11,7 @@ import { MediaType } from 'packages/obsidian/src/utils/MediaType';
 import { MEDIA_TYPES } from 'packages/obsidian/src/utils/MediaTypeManager';
 import { unCamelCase } from 'packages/obsidian/src/utils/Utils';
 
-export const LEGACY_API_KEY_SETTINGS: readonly string[] = ['OMDbKey', 'TMDBKey', 'MobyGamesKey', 'GiantBombKey', 'ComicVineKey', 'BoardgameGeekKey'];
+export const LEGACY_API_KEY_SETTINGS: readonly string[] = ['OMDbKey', 'TMDBKey', 'MobyGamesKey', 'GiantBombKey', 'ComicVineKey', 'BoardgameGeekKey', 'RawgKey', 'GoogleBooksKey'];
 
 function createDateFormatDescription(preview: string): DocumentFragment {
 	return createFragment(frag => {
@@ -57,6 +57,7 @@ export interface MediaDbPluginSettings {
 	IGDBClientId: string;
 	IGDBClientSecret: string;
 	RAWGAPIKeyId: string;
+	GoogleBooksKeyId: string;
 	ComicVineKeyId: string;
 	BoardgameGeekKeyId: string;
 
@@ -71,7 +72,7 @@ export interface MediaDbPluginSettings {
 
 	BoardgameGeekAPI_disabledMediaTypes: MediaType[];
 	ComicVineAPI_disabledMediaTypes: MediaType[];
-	//GiantBombAPI_disabledMediaTypes: MediaType[];
+	GoogleBooksAPI_disabledMediaTypes: MediaType[];
 	IGDBAPI_disabledMediaTypes: MediaType[];
 	RAWGAPI_disabledMediaTypes: MediaType[];
 	MALAPI_disabledMediaTypes: MediaType[];
@@ -80,12 +81,10 @@ export interface MediaDbPluginSettings {
 	MusicBrainzAPI_disabledMediaTypes: MediaType[];
 	OMDbAPI_disabledMediaTypes: MediaType[];
 	OpenLibraryAPI_disabledMediaTypes: MediaType[];
-	SteamAPI_disabledMediaTypes: MediaType[];
 	TMDBMovieAPI_disabledMediaTypes: MediaType[];
 	TMDBSeasonAPI_disabledMediaTypes: MediaType[];
 	TMDBSeriesAPI_disabledMediaTypes: MediaType[];
 	VNDBAPI_disabledMediaTypes: MediaType[];
-	WikipediaAPI_disabledMediaTypes: MediaType[];
 
 	movieTemplate: string;
 	seriesTemplate: string;
@@ -153,8 +152,6 @@ class MediaTypeMappedSettings {
 				return settings.mangaTemplate;
 			case MediaType.Game:
 				return settings.gameTemplate;
-			case MediaType.Wiki:
-				return settings.wikiTemplate;
 			case MediaType.MusicRelease:
 				return settings.musicReleaseTemplate;
 			case MediaType.BoardGame:
@@ -181,9 +178,6 @@ class MediaTypeMappedSettings {
 			case MediaType.Game:
 				settings.gameTemplate = template;
 				break;
-			case MediaType.Wiki:
-				settings.wikiTemplate = template;
-				break;
 			case MediaType.MusicRelease:
 				settings.musicReleaseTemplate = template;
 				break;
@@ -208,8 +202,6 @@ class MediaTypeMappedSettings {
 				return settings.mangaFileNameTemplate;
 			case MediaType.Game:
 				return settings.gameFileNameTemplate;
-			case MediaType.Wiki:
-				return settings.wikiFileNameTemplate;
 			case MediaType.MusicRelease:
 				return settings.musicReleaseFileNameTemplate;
 			case MediaType.BoardGame:
@@ -236,9 +228,6 @@ class MediaTypeMappedSettings {
 			case MediaType.Game:
 				settings.gameFileNameTemplate = template;
 				break;
-			case MediaType.Wiki:
-				settings.wikiFileNameTemplate = template;
-				break;
 			case MediaType.MusicRelease:
 				settings.musicReleaseFileNameTemplate = template;
 				break;
@@ -263,8 +252,6 @@ class MediaTypeMappedSettings {
 				return settings.mangaFolder;
 			case MediaType.Game:
 				return settings.gameFolder;
-			case MediaType.Wiki:
-				return settings.wikiFolder;
 			case MediaType.MusicRelease:
 				return settings.musicReleaseFolder;
 			case MediaType.BoardGame:
@@ -291,9 +278,6 @@ class MediaTypeMappedSettings {
 			case MediaType.Game:
 				settings.gameFolder = folder;
 				break;
-			case MediaType.Wiki:
-				settings.wikiFolder = folder;
-				break;
 			case MediaType.MusicRelease:
 				settings.musicReleaseFolder = folder;
 				break;
@@ -316,6 +300,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	IGDBClientId: '',
 	IGDBClientSecret: '',
 	RAWGAPIKeyId: '',
+	GoogleBooksKeyId: '',
 	ComicVineKeyId: '',
 	BoardgameGeekKeyId: '',
 
@@ -330,7 +315,7 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 
 	BoardgameGeekAPI_disabledMediaTypes: [],
 	ComicVineAPI_disabledMediaTypes: [],
-	//GiantBombAPI_disabledMediaTypes: [],
+	GoogleBooksAPI_disabledMediaTypes: [],
 	IGDBAPI_disabledMediaTypes: [],
 	RAWGAPI_disabledMediaTypes: [],
 	MALAPI_disabledMediaTypes: [],
@@ -339,12 +324,10 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	MusicBrainzAPI_disabledMediaTypes: [],
 	OMDbAPI_disabledMediaTypes: [],
 	OpenLibraryAPI_disabledMediaTypes: [],
-	SteamAPI_disabledMediaTypes: [],
 	TMDBMovieAPI_disabledMediaTypes: [],
 	TMDBSeasonAPI_disabledMediaTypes: [],
 	TMDBSeriesAPI_disabledMediaTypes: [],
 	VNDBAPI_disabledMediaTypes: [],
-	WikipediaAPI_disabledMediaTypes: [],
 
 	movieTemplate: '',
 	seriesTemplate: '',
@@ -686,6 +669,22 @@ export class MediaDbSettingTab extends PluginSettingTab {
 
 						component.setValue(this.plugin.settings.RAWGAPIKeyId).onChange(data => {
 							this.plugin.settings.RAWGAPIKeyId = data;
+							void this.plugin.saveSettings();
+						});
+
+						return component;
+					}),
+		);
+		apiKeyGroup.addSetting(
+			setting =>
+				void setting
+					.setName('Google Books API key')
+					.setDesc('API key for the Google Books API. Optional, get one free at https://console.cloud.google.com/.')
+					.addComponent(el => {
+						const component = new SecretComponent(this.app, el);
+
+						component.setValue(this.plugin.settings.GoogleBooksKeyId).onChange(data => {
+							this.plugin.settings.GoogleBooksKeyId = data;
 							void this.plugin.saveSettings();
 						});
 
