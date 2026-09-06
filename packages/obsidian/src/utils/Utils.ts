@@ -188,7 +188,8 @@ export class PropertyMappingNameConflictError extends Error {
 /**
  * - attachTemplate: whether to attach the template (DEFAULT: false)
  * - attachFie: a file to attach (DEFAULT: undefined)
- * - openNote: whether to open the note after creation (DEFAULT: false)
+ * - openNote: whether to open the note after creation; the `openNoteInNewTab` setting decides in which tab (DEFAULT: false)
+ *   `createMediaDbNotes` turns this on for every note it creates.
  * - folder: folder to put the note in
  */
 export interface CreateNoteOptions {

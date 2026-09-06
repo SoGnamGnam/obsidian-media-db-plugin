@@ -32,6 +32,15 @@ function createDateFormatDescription(preview: string): DocumentFragment {
 	});
 }
 
+function createApiDescription(description: string, url: string): DocumentFragment {
+	return createFragment(frag => {
+		const container = frag.createDiv();
+		container.appendText(description);
+		container.createEl('br');
+		container.createEl('a', { href: url, text: url });
+	});
+}
+
 function createPropertyMappingsDescription(): DocumentFragment {
 	return createFragment(frag => {
 		const container = frag.createDiv();
@@ -69,6 +78,9 @@ export interface MediaDbPluginSettings {
 	enableTemplaterIntegration: boolean;
 	imageDownload: boolean;
 	imageFolder: string;
+
+	/** Names of APIs that the user has turned off entirely. Disabled APIs are hidden from every search. */
+	disabledApis: string[];
 
 	BoardgameGeekAPI_disabledMediaTypes: MediaType[];
 	ComicVineAPI_disabledMediaTypes: MediaType[];
@@ -313,6 +325,8 @@ const DEFAULT_SETTINGS: MediaDbPluginSettings = {
 	imageDownload: false,
 	imageFolder: 'Media DB/images',
 
+	disabledApis: [],
+
 	BoardgameGeekAPI_disabledMediaTypes: [],
 	ComicVineAPI_disabledMediaTypes: [],
 	GoogleBooksAPI_disabledMediaTypes: [],
@@ -485,7 +499,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			setting =>
 				void setting
 					.setName('Open note in new tab')
-					.setDesc('Open the newly created note in a new tab.')
+					.setDesc('Open each newly created note in its own tab. When disabled, the notes replace whatever is open in the current tab.')
 					.addToggle(cb => {
 						cb.setValue(this.plugin.settings.openNoteInNewTab).onChange(data => {
 							this.plugin.settings.openNoteInNewTab = data;
@@ -558,6 +572,35 @@ export class MediaDbSettingTab extends PluginSettingTab {
 							});
 					}),
 		);
+
+		// MARK: APIs
+		const apiGroup = new SettingGroup(containerEl);
+		apiGroup.setHeading('APIs');
+
+		for (const api of this.plugin.apiManager.apis) {
+			apiGroup.addSetting(
+				setting =>
+					void setting
+						.setName(api.apiName)
+						.setDesc(createApiDescription(api.apiDescription, api.apiUrl))
+						.addToggle(cb => {
+							cb.setValue(api.isEnabled()).onChange(data => {
+								const disabledApis = this.plugin.settings.disabledApis;
+								const index = disabledApis.indexOf(api.apiName);
+								if (data) {
+									if (index !== -1) {
+										disabledApis.splice(index, 1);
+									}
+								} else if (index === -1) {
+									disabledApis.push(api.apiName);
+								}
+								void this.plugin.saveSettings();
+								// the media type sections only list enabled APIs, so redraw them
+								this.display();
+							});
+						}),
+			);
+		}
 
 		// MARK: API keys
 		const apiKeyGroup = new SettingGroup(containerEl);
@@ -730,7 +773,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 		const mediaTypeApiMap = new Map<MediaType, string[]>();
 
 		// Populate the map with APIs for each media type dynamically
-		for (const api of this.plugin.apiManager.apis) {
+		for (const api of this.plugin.apiManager.getEnabledApis()) {
 			for (const mediaType of api.types) {
 				if (!mediaTypeApiMap.has(mediaType)) {
 					mediaTypeApiMap.set(mediaType, []);
@@ -813,7 +856,7 @@ export class MediaDbSettingTab extends PluginSettingTab {
 			const apis = mediaTypeApiMap.get(mediaType) ?? [];
 			if (apis.length > 1) {
 				for (const apiName of apis) {
-					const api = this.plugin.apiManager.apis.find(api => api.apiName === apiName);
+					const api = this.plugin.apiManager.getApiByName(apiName);
 					if (api) {
 						const disabledMediaTypes = api.getDisabledMediaTypes();
 

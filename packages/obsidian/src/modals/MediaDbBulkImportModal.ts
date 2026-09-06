@@ -17,7 +17,7 @@ export class MediaDbBulkImportModal extends Modal {
 		super(plugin.app);
 		this.plugin = plugin;
 		this.onSubmit = onSubmit;
-		this.selectedApi = plugin.apiManager.apis[0].apiName;
+		this.selectedApi = plugin.apiManager.getEnabledApis()[0]?.apiName ?? '';
 		this.lookupMethod = BulkImportLookupMethod.TITLE;
 		this.fieldName = '';
 		this.appendContent = false;
@@ -39,7 +39,7 @@ export class MediaDbBulkImportModal extends Modal {
 			(value: string) => {
 				this.selectedApi = value;
 			},
-			this.plugin.apiManager.apis.map((api: APIModel) => {
+			this.plugin.apiManager.getEnabledApis().map((api: APIModel) => {
 				return { value: api.apiName, display: api.apiName };
 			}),
 		);

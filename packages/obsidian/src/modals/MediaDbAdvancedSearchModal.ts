@@ -87,7 +87,7 @@ export class MediaDbAdvancedSearchModal extends Modal {
 		contentEl.createEl('h3', { text: 'APIs to search' });
 
 		// const apiToggleComponents: Component[] = [];
-		for (const api of this.plugin.apiManager.apis) {
+		for (const api of this.plugin.apiManager.getEnabledApis()) {
 			const apiToggleListElementWrapper = contentEl.createDiv({ cls: 'media-db-plugin-list-wrapper' });
 
 			const apiToggleTextWrapper = apiToggleListElementWrapper.createDiv({ cls: 'media-db-plugin-list-text-wrapper' });

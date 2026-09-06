@@ -27,7 +27,7 @@ export class APIManager {
 	async query(query: string, apisToQuery: string[]): Promise<Result<ApiQueryOk, MDBError>> {
 		Logger.debug(`MDB | api manager queried with "${query}"`);
 
-		const apis = this.apis.filter(api => apisToQuery.includes(api.apiName));
+		const apis = this.getEnabledApis().filter(api => apisToQuery.includes(api.apiName));
 		const results = await Promise.all(apis.map(api => api.searchByTitle(query)));
 
 		const items: MediaTypeModel[] = [];
@@ -95,6 +95,14 @@ export class APIManager {
 				context: { apiName, id },
 			}),
 		);
+	}
+
+	/**
+	 * All APIs the user has not disabled in the settings. Use this everywhere APIs are offered
+	 * to the user; `apis` itself stays complete so notes from a disabled API can still be updated.
+	 */
+	getEnabledApis(): APIModel[] {
+		return this.apis.filter(api => api.isEnabled());
 	}
 
 	getApiByName(name: string): APIModel | undefined {

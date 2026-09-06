@@ -31,8 +31,8 @@ export class MediaDbFileHelper {
 		this.plugin = plugin;
 	}
 
-	async createMediaDbNotes(models: MediaTypeModel[], attachFile?: TFile): Promise<Result<void, MDBError>> {
-		const results = await Promise.all(models.map(model => this.createMediaDbNoteFromModel(model, { attachTemplate: true, attachFile })));
+	async createMediaDbNotes(models: MediaTypeModel[], attachFile?: TFile, openNote: boolean = true): Promise<Result<void, MDBError>> {
+		const results = await Promise.all(models.map(model => this.createMediaDbNoteFromModel(model, { attachTemplate: true, attachFile, openNote })));
 
 		const failures = results.filter(result => !result.ok);
 		if (failures.length > 0) {
@@ -49,8 +49,6 @@ export class MediaDbFileHelper {
 
 	async createMediaDbNoteFromModel(mediaTypeModel: MediaTypeModel, options: CreateNoteOptions): Promise<Result<void, MDBError>> {
 		Logger.debug('MDB | creating new note');
-
-		options.openNote = this.plugin.settings.openNoteInNewTab;
 
 		const folderResult = await this.attempt(() => this.plugin.mediaTypeManager.getFolder(mediaTypeModel, this.plugin.app), {
 			kind: MDBErrorKind.Vault,
@@ -373,13 +371,14 @@ export class MediaDbFileHelper {
 	}
 
 	private async openNote(file: TFile): Promise<void> {
-		const activeLeaf = this.plugin.app.workspace.getLeaf(false);
-		if (!activeLeaf) {
-			Logger.warn('MDB | no active leaf, not opening the note');
+		// 'tab' gives the note its own tab, false reuses the active one and replaces the note in it
+		const leaf = this.plugin.app.workspace.getLeaf(this.plugin.settings.openNoteInNewTab ? 'tab' : false);
+		if (!leaf) {
+			Logger.warn('MDB | no leaf available, not opening the note');
 			return;
 		}
 
-		await activeLeaf.openFile(file, { state: { mode: 'source' } });
+		await leaf.openFile(file, { state: { mode: 'source' } });
 	}
 
 	/** Returns the note a model would be written to, if one is already there. */

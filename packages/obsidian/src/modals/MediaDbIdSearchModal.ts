@@ -23,7 +23,7 @@ export class MediaDbIdSearchModal extends Modal {
 
 		this.plugin = plugin;
 		this.title = idSearchModalOptions.modalTitle ?? '';
-		this.selectedApi = idSearchModalOptions.preselectedAPI ?? plugin.apiManager.apis[0]?.apiName ?? '';
+		this.selectedApi = idSearchModalOptions.preselectedAPI ?? plugin.apiManager.getEnabledApis()[0]?.apiName ?? '';
 		this.query = idSearchModalOptions.prefilledSearchString ?? '';
 		this.isBusy = false;
 	}
@@ -91,7 +91,7 @@ export class MediaDbIdSearchModal extends Modal {
 		apiSelectorComponent.onChange((value: string) => {
 			this.selectedApi = value;
 		});
-		for (const api of this.plugin.apiManager.apis) {
+		for (const api of this.plugin.apiManager.getEnabledApis()) {
 			apiSelectorComponent.addOption(api.apiName, api.apiName);
 		}
 		apiSelectorComponent.setValue(this.selectedApi);

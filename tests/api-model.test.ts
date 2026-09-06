@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { APIModel, isSeasonListAPIModel } from 'packages/obsidian/src/api/APIModel';
+import type MediaDbPlugin from 'packages/obsidian/src/main';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
@@ -37,6 +38,21 @@ test('APIModel respects configured and disabled media types', () => {
 
 	expect(api.hasType(MediaType.Series)).toBe(false);
 	expect(api.hasTypeOverlap([MediaType.Book, MediaType.Series])).toBe(false);
+});
+
+test('APIModel respects APIs disabled in the settings', () => {
+	const api = new FakeAPI();
+	const settings = { disabledApis: [] as string[] };
+	api.plugin = { settings } as unknown as MediaDbPlugin;
+
+	expect(api.isEnabled()).toBe(true);
+	expect(api.hasType(MediaType.Movie)).toBe(true);
+
+	settings.disabledApis = ['fake'];
+
+	expect(api.isEnabled()).toBe(false);
+	expect(api.hasType(MediaType.Movie)).toBe(false);
+	expect(api.hasTypeOverlap([MediaType.Movie, MediaType.Series])).toBe(false);
 });
 
 test('isSeasonListAPIModel detects season-capable APIs', () => {

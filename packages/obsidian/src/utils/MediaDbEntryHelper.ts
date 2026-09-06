@@ -89,7 +89,10 @@ export class MediaDbEntryHelper {
 		}
 
 		const types = searchData.types;
-		const apis = this.plugin.apiManager.apis.filter(api => api.hasTypeOverlap(types)).map(api => api.apiName);
+		const apis = this.plugin.apiManager
+			.getEnabledApis()
+			.filter(api => api.hasTypeOverlap(types))
+			.map(api => api.apiName);
 		const apiSearchResults = await this.runModalQuery(searchSession, () => this.plugin.apiManager.query(searchData.query, apis));
 		if (!apiSearchResults) {
 			return;
@@ -264,7 +267,8 @@ export class MediaDbEntryHelper {
 		const seriesResult = seriesResults[0];
 		const sourceApi = this.plugin.apiManager.getApiByName(seriesResult.dataSource);
 		const seasonApiName = sourceApi?.getSeasonApiNameForSeries(seriesResult);
-		if (seasonApiName) {
+		// don't offer seasons when the user disabled the API that would provide them
+		if (seasonApiName && this.plugin.apiManager.getApiByName(seasonApiName)?.isEnabled()) {
 			const created = await this.showSeasonSelectAndCreate(seriesResult.id, seriesResult.title, undefined, seasonApiName);
 			return { handled: true, seasonsCreated: created };
 		}

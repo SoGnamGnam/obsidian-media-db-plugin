@@ -37,9 +37,18 @@ export abstract class APIModel {
 		return undefined;
 	}
 
+	/**
+	 * Whether the user has this API turned on. Disabled APIs are hidden from all searches,
+	 * but can still be used to update notes that were created from them.
+	 */
+	isEnabled(): boolean {
+		const disabledApis = this.plugin?.settings?.disabledApis ?? [];
+		return !disabledApis.includes(this.apiName);
+	}
+
 	hasType(type: MediaType): boolean {
 		const disabledMediaTypes = this.getDisabledMediaTypes();
-		return this.types.includes(type) && !disabledMediaTypes.includes(type);
+		return this.isEnabled() && this.types.includes(type) && !disabledMediaTypes.includes(type);
 	}
 
 	hasTypeOverlap(types: MediaType[]): boolean {
