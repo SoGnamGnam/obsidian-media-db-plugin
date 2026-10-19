@@ -1,4 +1,3 @@
-import { requestUrl } from 'obsidian';
 import { APIModel } from 'packages/obsidian/src/api/APIModel';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
@@ -7,6 +6,7 @@ import { Logger } from 'packages/obsidian/src/utils/Logger';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
 import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
+import { requestUrlWithRetry } from 'packages/obsidian/src/utils/requestWithRetry';
 import type { Result } from 'packages/obsidian/src/utils/result';
 import { err, fromPromise, ok } from 'packages/obsidian/src/utils/result';
 import { contactEmail, getLanguageName, mediaDbVersion, pluginName } from 'packages/obsidian/src/utils/Utils';
@@ -114,7 +114,7 @@ export class MusicBrainzAPI extends APIModel {
 		const searchUrl = `https://musicbrainz.org/ws/2/release-group?query=${encodeURIComponent(title)}&limit=20&fmt=json`;
 
 		const fetchDataResult = await fromPromise(
-			requestUrl({
+			requestUrlWithRetry({
 				url: searchUrl,
 				headers: {
 					'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
@@ -178,7 +178,7 @@ export class MusicBrainzAPI extends APIModel {
 		// Fetch release group
 		const groupUrl = `https://musicbrainz.org/ws/2/release-group/${encodeURIComponent(id)}?inc=releases+artists+tags+ratings+genres&fmt=json`;
 		const groupResponseResult = await fromPromise(
-			requestUrl({
+			requestUrlWithRetry({
 				url: groupUrl,
 				headers: {
 					'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,
@@ -224,7 +224,7 @@ export class MusicBrainzAPI extends APIModel {
 		Logger.log(`MDB | Fetching release recordings from: ${releaseUrl}`);
 
 		const releaseResponseResult = await fromPromise(
-			requestUrl({
+			requestUrlWithRetry({
 				url: releaseUrl,
 				headers: {
 					'User-Agent': `${pluginName}/${mediaDbVersion} (${contactEmail})`,

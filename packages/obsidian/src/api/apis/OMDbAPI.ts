@@ -1,4 +1,3 @@
-import { requestUrl } from 'obsidian';
 import { APIModel } from 'packages/obsidian/src/api/APIModel';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import { GameModel } from 'packages/obsidian/src/models/GameModel';
@@ -9,6 +8,7 @@ import { Logger } from 'packages/obsidian/src/utils/Logger';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
 import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
+import { requestUrlWithRetry } from 'packages/obsidian/src/utils/requestWithRetry';
 import type { Result } from 'packages/obsidian/src/utils/result';
 import { err, fromPromise, ok } from 'packages/obsidian/src/utils/result';
 
@@ -93,7 +93,7 @@ export class OMDbAPI extends APIModel {
 		}
 
 		const responseResult = await fromPromise(
-			requestUrl({
+			requestUrlWithRetry({
 				url: `https://www.omdbapi.com/?s=${encodeURIComponent(title)}&apikey=${key}`,
 				method: 'GET',
 			}),
@@ -217,7 +217,7 @@ export class OMDbAPI extends APIModel {
 		}
 
 		const responseResult = await fromPromise(
-			requestUrl({
+			requestUrlWithRetry({
 				url: `https://www.omdbapi.com/?i=${encodeURIComponent(id)}&apikey=${key}`,
 				method: 'GET',
 			}),

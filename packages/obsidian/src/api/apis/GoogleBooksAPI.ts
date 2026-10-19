@@ -1,4 +1,3 @@
-import { requestUrl } from 'obsidian';
 import { APIModel } from 'packages/obsidian/src/api/APIModel';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import { BookModel } from 'packages/obsidian/src/models/BookModel';
@@ -7,6 +6,7 @@ import { Logger } from 'packages/obsidian/src/utils/Logger';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
 import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
+import { requestUrlWithRetry } from 'packages/obsidian/src/utils/requestWithRetry';
 import type { Result } from 'packages/obsidian/src/utils/result';
 import { err, fromPromise, ok } from 'packages/obsidian/src/utils/result';
 
@@ -157,7 +157,7 @@ export class GoogleBooksAPI extends APIModel {
 		const searchUrl = this.withApiKey(`${this.BASE_URL}/volumes?q=${encodeURIComponent(title)}&maxResults=20`);
 
 		const fetchDataResult = await fromPromise(
-			requestUrl({
+			requestUrlWithRetry({
 				url: searchUrl,
 				throw: false,
 			}),
@@ -217,7 +217,7 @@ export class GoogleBooksAPI extends APIModel {
 		const detailUrl = this.withApiKey(`${this.BASE_URL}/volumes/${encodeURIComponent(id)}`);
 
 		const fetchDataResult = await fromPromise(
-			requestUrl({
+			requestUrlWithRetry({
 				url: detailUrl,
 				throw: false,
 			}),

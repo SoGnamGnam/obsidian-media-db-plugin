@@ -1,5 +1,5 @@
 import { TFile, TFolder } from 'obsidian';
-import { Notice, normalizePath, parseYaml, requestUrl, stringifyYaml } from 'obsidian';
+import { Notice, normalizePath, parseYaml, stringifyYaml } from 'obsidian';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import type { OverwriteAction } from 'packages/obsidian/src/modals/ConfirmOverwriteModal';
 import { ConfirmOverwriteModal } from 'packages/obsidian/src/modals/ConfirmOverwriteModal';
@@ -10,6 +10,7 @@ import { Logger } from 'packages/obsidian/src/utils/Logger';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
 import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
 import type { MediaType } from 'packages/obsidian/src/utils/MediaType';
+import { requestUrlWithRetry } from 'packages/obsidian/src/utils/requestWithRetry';
 import type { Result } from 'packages/obsidian/src/utils/result';
 import { err, ok } from 'packages/obsidian/src/utils/result';
 import type { CreateNoteOptions } from 'packages/obsidian/src/utils/Utils';
@@ -443,7 +444,7 @@ export class MediaDbFileHelper {
 					}
 
 					if (!this.plugin.app.vault.getAbstractFileByPath(imagePath)) {
-						const response = await requestUrl({ url: imageUrl, method: 'GET' });
+						const response = await requestUrlWithRetry({ url: imageUrl, method: 'GET' });
 						await this.plugin.app.vault.createBinary(imagePath, response.arrayBuffer);
 					}
 

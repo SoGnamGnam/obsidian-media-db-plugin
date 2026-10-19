@@ -2,6 +2,7 @@ import { iso6392 } from 'iso-639-2';
 import type { TFile, TFolder, App } from 'obsidian';
 import { requestUrl } from 'obsidian';
 import type { MediaTypeModel } from 'packages/obsidian/src/models/MediaTypeModel';
+import { requestUrlWithRetry } from 'packages/obsidian/src/utils/requestWithRetry';
 
 export const pluginName: string = 'obsidian-media-db-plugin';
 export const contactEmail: string = 'm.projects.code@gmail.com';
@@ -289,7 +290,7 @@ export async function obsidianFetch(input: Request): Promise<Response> {
 		obs_headers[key] = value;
 	});
 
-	const res = await requestUrl({
+	const res = await requestUrlWithRetry({
 		url: input.url,
 		method: input.method,
 		headers: obs_headers,

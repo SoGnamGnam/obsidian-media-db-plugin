@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 
-import { requestUrl } from 'obsidian';
 import { APIModel } from 'packages/obsidian/src/api/APIModel';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import { ComicMangaModel } from 'packages/obsidian/src/models/ComicMangaModel';
@@ -9,6 +8,7 @@ import { Logger } from 'packages/obsidian/src/utils/Logger';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
 import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
+import { requestUrlWithRetry } from 'packages/obsidian/src/utils/requestWithRetry';
 import type { Result } from 'packages/obsidian/src/utils/result';
 import { err, fromPromise, ok } from 'packages/obsidian/src/utils/result';
 
@@ -41,7 +41,7 @@ export class ComicVineAPI extends APIModel {
 
 		const searchUrl = `${this.apiUrl}/search/?api_key=${key}&format=json&resources=volume&query=${encodeURIComponent(title)}`;
 		const fetchDataResult = await fromPromise(
-			requestUrl({
+			requestUrlWithRetry({
 				url: searchUrl,
 			}),
 			cause =>
@@ -99,7 +99,7 @@ export class ComicVineAPI extends APIModel {
 
 		const searchUrl = `${this.apiUrl}/volume/${encodeURIComponent(id)}/?api_key=${key}&format=json`;
 		const fetchDataResult = await fromPromise(
-			requestUrl({
+			requestUrlWithRetry({
 				url: searchUrl,
 			}),
 			cause =>

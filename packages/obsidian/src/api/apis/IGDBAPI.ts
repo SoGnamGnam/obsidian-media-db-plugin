@@ -1,4 +1,3 @@
-import { requestUrl } from 'obsidian';
 import { APIModel } from 'packages/obsidian/src/api/APIModel';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import { GameModel } from 'packages/obsidian/src/models/GameModel';
@@ -7,6 +6,7 @@ import { Logger } from 'packages/obsidian/src/utils/Logger';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
 import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
+import { requestUrlWithRetry } from 'packages/obsidian/src/utils/requestWithRetry';
 import type { Result } from 'packages/obsidian/src/utils/result';
 import { err, fromPromise, ok } from 'packages/obsidian/src/utils/result';
 
@@ -77,7 +77,7 @@ export class IGDBAPI extends APIModel {
 		}
 		Logger.log(`MDB | Refreshing Twitch Auth Token for ${this.apiName}`);
 		const responseResult = await fromPromise(
-			requestUrl({
+			requestUrlWithRetry({
 				url: `https://id.twitch.tv/oauth2/token?client_id=${clientId}&client_secret=${clientSecret}&grant_type=client_credentials`,
 				method: 'POST',
 			}),
@@ -127,7 +127,7 @@ export class IGDBAPI extends APIModel {
 		const token = tokenResult.value;
 		const queryBody = `search "${title}"; fields name, cover.url, first_release_date, summary, total_rating; limit 20;`;
 		const responseResult = await fromPromise(
-			requestUrl({
+			requestUrlWithRetry({
 				url: `${this.apiUrl}/games`,
 				method: 'POST',
 				headers: { 'Client-ID': clientId, Authorization: `Bearer ${token}`, Accept: 'application/json' },
@@ -190,7 +190,7 @@ export class IGDBAPI extends APIModel {
 		const token = tokenResult.value;
 		const queryBody = `fields name, cover.url, first_release_date, summary, total_rating, url, genres.name, involved_companies.company.name, involved_companies.developer, involved_companies.publisher; where id = ${id};`;
 		const responseResult = await fromPromise(
-			requestUrl({
+			requestUrlWithRetry({
 				url: `${this.apiUrl}/games`,
 				method: 'POST',
 				headers: { 'Client-ID': clientId, Authorization: `Bearer ${token}`, Accept: 'application/json' },

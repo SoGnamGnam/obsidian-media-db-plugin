@@ -1,4 +1,3 @@
-import { requestUrl } from 'obsidian';
 import { APIModel } from 'packages/obsidian/src/api/APIModel';
 import type MediaDbPlugin from 'packages/obsidian/src/main';
 import { BoardGameModel } from 'packages/obsidian/src/models/BoardGameModel';
@@ -7,6 +6,7 @@ import { Logger } from 'packages/obsidian/src/utils/Logger';
 import type { MDBError } from 'packages/obsidian/src/utils/MDBError';
 import { MDBErrorKind, toMdbError } from 'packages/obsidian/src/utils/MDBError';
 import { MediaType } from 'packages/obsidian/src/utils/MediaType';
+import { requestUrlWithRetry } from 'packages/obsidian/src/utils/requestWithRetry';
 import type { Result } from 'packages/obsidian/src/utils/result';
 import { err, fromPromise, ok } from 'packages/obsidian/src/utils/result';
 
@@ -39,7 +39,7 @@ export class BoardGameGeekAPI extends APIModel {
 
 		const searchUrl = `${this.apiUrl}/search?query=${encodeURIComponent(title)}&type=boardgame`;
 		const fetchDataResult = await fromPromise(
-			requestUrl({
+			requestUrlWithRetry({
 				url: searchUrl,
 				headers: this.getAuthHeaders(),
 			}),
@@ -94,7 +94,7 @@ export class BoardGameGeekAPI extends APIModel {
 				.filter(Boolean)
 				.join(',');
 			const detailsUrl = `${this.apiUrl}/thing?id=${ids}`;
-			const detailsResult = await fromPromise(requestUrl({ url: detailsUrl, headers: this.getAuthHeaders() }), cause => cause);
+			const detailsResult = await fromPromise(requestUrlWithRetry({ url: detailsUrl, headers: this.getAuthHeaders() }), cause => cause);
 			if (detailsResult.ok && detailsResult.value.status === 200) {
 				const detailsResponse = new window.DOMParser().parseFromString(detailsResult.value.text, 'text/xml');
 				for (const item of Array.from(detailsResponse.querySelectorAll('item'))) {
@@ -116,7 +116,7 @@ export class BoardGameGeekAPI extends APIModel {
 
 		const searchUrl = `${this.apiUrl}/thing?id=${encodeURIComponent(id)}&stats=1`;
 		const fetchDataResult = await fromPromise(
-			requestUrl({
+			requestUrlWithRetry({
 				url: searchUrl,
 				headers: this.getAuthHeaders(),
 			}),
